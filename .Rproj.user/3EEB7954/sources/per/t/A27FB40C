@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1534963399876.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2106182634",
+    "id" : "A27FB40C",
+    "lastKnownWriteTime" : 1534963424,
+    "last_content_update" : 1534963424360,
+    "path" : "D:/Projects/OneDrive/afsc/Light data processing/trawllight/R/trawllight.R",
+    "project_path" : "R/trawllight.R",
+    "properties" : {
+        "cursorPosition" : "9,19",
+        "scrollLine" : "0",
+        "tempName" : "Untitled2"
+    },
+    "relative_order" : 14,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

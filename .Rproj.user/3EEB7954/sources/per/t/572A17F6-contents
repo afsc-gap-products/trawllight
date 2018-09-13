@@ -1,0 +1,727 @@
+# Find the depths where light levels were reduced to 10% and 1% of light at I1
+
+# Define projection
+race.proj <- "+proj=longlat +datum=NAD83"
+aea.proj <- "+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs" #+ellps=GRS80
+fed.proj <- CRS("+init=epsg:3338 +datum=NAD83")
+
+# Import GIS layers
+if(.Platform$OS.type == "unix") {
+  root.dir <- "~/Documents/Projects/OneDrive/"
+} else {
+  root.dir <- "D:/Projects/OneDrive/"
+}
+
+akland <- st_read(paste(root.dir, "afsc/geo_files/AKLAND.shp", sep = ""))
+survey.area <- readShapePoly(paste(root.dir, "afsc/geo_files/AKSHELFSURVEY", sep = ""), proj = fed.proj, verbose=TRUE)
+bathymetry <- st_read(paste(root.dir, "afsc/geo_files/AKBATHYMETRY.shp", sep = ""))
+
+# Initialize raster and mask for interpolation
+sp_interp.raster <- raster(xmn=-1.5e6,xmx=0,ymn=500000,ymx=1700000,nrow=500,ncol=500)
+projection(sp_interp.raster) <- aea.proj # Define interpolation raster
+akland2 <- st_transform(akland, race.proj)
+bathymetry2 <- st_transform(bathymetry, race.proj)
+
+# RMSE function
+RMSE <- function(observed, predicted) {
+  sqrt(mean((predicted - observed)^2))
+}
+
+# Initialize output data frame for bootstrap
+spatial_fit <- data.frame(nn = numeric(), 
+                          idw = numeric(), 
+                          Exp = numeric(),
+                          Sph = numeric(),
+                          Cir = numeric(),
+                          Gau = numeric(),
+                          Bes = numeric(),
+                          Mat = numeric(),
+                          Ste = numeric(),
+                          Tps = numeric(),
+                          cruise = numeric())
+
+
+#===========================================
+# START CROSS-VALIDATION OF RMSE to find optimal interpolation method for each year
+#===========================================
+cruises <- unique(whole.col.analysis$cruise)
+whole.col.analysis$z_od1 <- as.numeric(whole.col.analysis$z_od1)
+casts.with.z_od1 <- subset(whole.col.analysis, !is.na(z_od1))
+
+for(h in 1:length(cruises)) {
+  # Initialize optical depth spatial data frame for kriginging
+  sp_interp.df <- subset(dplyr::select(casts.with.z_od1, vessel, cruise, haul, start_longitude, start_latitude, z_od1, bottom_depth), cruise == cruises[h])
+  coordinates(sp_interp.df) <- c(x = "start_longitude", y = "start_latitude")
+  proj4string(sp_interp.df) <- CRS(race.proj)
+  sp_interp.df <- spTransform(sp_interp.df, aea.proj)
+  
+  null.rmse <- RMSE(mean(sp_interp.df$z_od1), sp_interp.df$z_od1)
+  kpart <- 5 # Partitions for cv
+  iter <- 999 # Iterations 
+  nm <- 12 # Only use the eight closest stations for distance-weighting methods
+  
+  # Initialize vectors to store bootstrap RMSE
+  idw.rmse.mean <- rep(NA, iter)
+  tps.rmse.mean <- rep(NA, iter)
+  exp.rmse.mean <- rep(NA, iter)
+  sph.rmse.mean <- rep(NA, iter)
+  bes.rmse.mean <- rep(NA, iter)
+  cir.rmse.mean <- rep(NA, iter)
+  gau.rmse.mean <- rep(NA, iter)
+  mat.rmse.mean <- rep(NA, iter)
+  ste.rmse.mean <- rep(NA, iter)
+  nn.rmse.mean <- rep(NA, iter)
+  
+  for(i in 1:iter) {
+    kf <- kfold(sp_interp.df, kpart)
+    fit_test <- sp_interp.df[kf == 1, ]
+    train <- sp_interp.df[kf != 1, ]
+    
+    # Nearest-neighbor
+    nn_fit <- gstat(formula = z_od1~1, locations = train, set = list(idp = 0), nmax = nm)
+    nn.predict <- predict(nn_fit, fit_test)
+    nn.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = nn.predict$var1.pred))
+    
+    # IDW
+    idw_fit <- gstat(formula = z_od1~1, locations = train, nmax = nm)
+    idw.predict <- predict(idw_fit, fit_test)
+    idw.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = idw.predict$var1.pred))
+    
+    # Ordinary kriging
+    exp.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Exp")))
+    exp.k_fit <- gstat(formula = z_od1~1, locations = train, model = exp.vgfit_train, nmax = nm)
+    exp.k.predict <- predict(exp.k_fit, fit_test)
+    exp.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = exp.k.predict$var1.pred))
+    
+    sph.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Sph")))
+    sph.k_fit <- gstat(formula = z_od1~1, locations = train, model = sph.vgfit_train, nmax = nm)
+    sph.k.predict <- predict(sph.k_fit, fit_test)
+    sph.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = sph.k.predict$var1.pred))
+    
+    bes.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Bes")))
+    bes.k_fit <- gstat(formula = z_od1~1, locations = train, model = bes.vgfit_train, nmax = nm)
+    bes.k.predict <- predict(bes.k_fit, fit_test)
+    bes.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = bes.k.predict$var1.pred))
+    
+    gau.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Gau")))
+    gau.k_fit <- gstat(formula = z_od1~1, locations = train, model = gau.vgfit_train, nmax = nm)
+    gau.k.predict <- predict(gau.k_fit, fit_test)
+    gau.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = gau.k.predict$var1.pred))
+    
+    cir.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Cir")))
+    cir.k_fit <- gstat(formula = z_od1~1, locations = train, model = cir.vgfit_train, nmax = nm)
+    cir.k.predict <- predict(cir.k_fit, fit_test)
+    cir.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = cir.k.predict$var1.pred))
+    
+    mat.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Mat")))
+    mat.k_fit <- gstat(formula = z_od1~1, locations = train, model = mat.vgfit_train, nmax = nm)
+    mat.k.predict <- predict(mat.k_fit, fit_test)
+    mat.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = mat.k.predict$var1.pred))
+    
+    ste.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Ste")))
+    ste.k_fit <- gstat(formula = z_od1~1, locations = train, model = ste.vgfit_train, nmax = nm)
+    ste.k.predict <- predict(ste.k_fit, fit_test)
+    ste.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = ste.k.predict$var1.pred))
+    
+    # TPS
+    tps_fit <- Tps(coordinates(train), train$z_od1)
+    tps.predict <- predict(tps_fit, coordinates(fit_test))
+    tps.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od1, predicted = tps.predict[,1]))
+    
+  }
+  
+  sp_compare.rmse <- data.frame(nn = nn.rmse.mean, 
+                                idw = idw.rmse.mean, 
+                                Exp = exp.rmse.mean,
+                                Sph = sph.rmse.mean,
+                                Cir = cir.rmse.mean,
+                                Gau = gau.rmse.mean,
+                                Bes = bes.rmse.mean,
+                                Mat = mat.rmse.mean,
+                                Ste = ste.rmse.mean,
+                                Tps = tps.rmse.mean)
+  sp_compare.rmse$cruise <- cruises[h]
+  
+  spatial_fit <- rbind.fill(spatial_fit, sp_compare.rmse)
+  
+}
+
+spatial_z_od1 <- melt(spatial_fit, id.vars = c("cruise"))
+z_od1_cv_8020 <- spatial_z_od1
+write.csv(z_od1_cv_8020, file = "./output/spatial_z_od1_rmse8020.csv", row.names = F)
+
+#===========================================
+# END CROSS-VALIDATION
+#===========================================
+
+z_od1_rmse.df <- aggregate(data = z_od1_cv_8020, value ~ variable + cruise, mean) # Average RMSE by method
+z_od1_rmse.min <- aggregate(data = z_od1_rmse.df, value ~ cruise, min)
+z_od1_rmse.best <- inner_join(z_od1_rmse.df, z_od1_rmse.min)
+z_od1_rmse.count <- data.frame(table(casts.with.z_od1$cruise))
+names(z_od1_rmse.count) <- c("cruise", "n.stations")
+z_od1_rmse.best <- merge(z_od1_rmse.best, z_od1_rmse.count)
+
+
+z_od1_rmse.best$best <- "Lowest"
+z_od1_cv_8020 <- full_join(z_od1_cv_8020, select(z_od1_rmse.best, cruise, variable, best))
+z_od1_cv_8020$method <- z_od1_cv_8020$variable
+levels(z_od1_cv_8020$method) <- c("NN", "IDW", "OK-EXP", "OK-SPH", "OK-CIR", "OK-GAU", "OK-BES", "OK-MAT", "OK-STE", "TPS")
+
+# Offset RMSE for plotting
+z_od1_rmse.df <- merge(z_od1_rmse.df, data.frame(variable = unique(z_od1_rmse.df$variable), offset = seq(0, 0.72, 0.08)))
+
+# VIOLIN PLOT OF RMSE
+
+png(file = "./figures/OD_rmse_violin.png", width = 9, height = 6, units = "in", res = 300)
+ggplot() + geom_violin(data = z_od1_cv_8020, aes(x = factor(floor(cruise/100)), y = value, fill = best)) + 
+  scale_fill_manual(values = c("#F00F00", NA), guide = F) +
+  scale_x_discrete(name = "Year") +
+  scale_y_continuous(name = expression(paste("Root-mean-square error ", italic(OD[nb])))) +
+  facet_wrap(~method) +
+  theme(panel.background = element_rect(fill = NA, color = "black"),
+        panel.border = element_rect(fill = NA, color = "black"),
+        axis.text = element_text(family = "serif", size = 12, face = "bold"),
+        axis.title = element_text(family = "serif", size = 12, face = "bold"),
+        axis.text.x = element_text(family = "serif", size = 12, angle = 90, hjust = 1, vjust = 0.5, face = "bold"),
+        legend.title = element_text(family = "serif", size = 12, face = "bold"),
+        legend.text = element_text(family = "serif", size = 12),
+        strip.text = element_text(family = "serif", size = 12, face = "bold"),
+        legend.position = "bottom")
+dev.off()
+
+# Station-specific interpolation
+z_od1_interpolated_od <- inner_join(haul_time_position, unique(dplyr::select(casts.with.z_od1, vessel, cruise)))
+z_od1_interpolated_od <- subset(z_od1_interpolated_od, performance >= 0 & haul_type == 3)
+z_od1_interpolated_od$stationid <- factor(z_od1_interpolated_od$stationid)
+coordinates(z_od1_interpolated_od) <- c(x = "start_longitude", y = "start_latitude")
+proj4string(z_od1_interpolated_od) <- CRS(race.proj)
+z_od1_interpolated_od <- spTransform(z_od1_interpolated_od, aea.proj)
+z_od1_interpolated_od$OD_interpolated <- NA
+
+
+for(U in 1:nrow(z_od1_rmse.best)) {
+  sp_select.df <- subset(dplyr::select(casts.with.z_od1, vessel, cruise, haul, start_longitude, start_latitude, z_od1, bottom_depth), cruise == rmse.best$cruise[U])
+  coordinates(sp_select.df) <- c(x = "start_longitude", y = "start_latitude")
+  proj4string(sp_select.df) <- CRS(race.proj)
+  sp_select.df <- spTransform(sp_select.df, aea.proj)
+  
+  if(z_od1_rmse.best$variable[U] %in% c("idw", "Exp", "Sph", "Bes", "Gau", "Cir", "Mat", "Ste")) { # Spatial interpolation using ordinary kriging
+    best.k_fit <- gstat(formula = z_od1~1, locations = sp_select.df, nmax = nm)
+    
+    if(z_od1_rmse.best$variable[U] != "idw") {
+      best.vgfit <- fit.variogram(variogram(best.k_fit), vgm(as.character(z_od1_rmse.best$variable[U])))
+      best.k_fit <- gstat(formula = z_od1~1, locations = sp_select.df, model = best.vgfit, nmax = nm)
+    }
+    
+    od_raster <- predict(best.k_fit, as(sp_interp.raster, "SpatialGrid"))
+    od_raster <- raster(od_raster)
+    z_od1_interpolated_od$OD_interpolated[which(z_od1_interpolated_od$cruise == z_od1_rmse.best$cruise[U])] <- 
+      predict(best.k_fit, z_od1_interpolated_od[which(z_od1_interpolated_od$cruise == z_od1_rmse.best$cruise[U]),])$var1.pred
+  } else if(z_od1_rmse.best$variable[U] == "Tps") { # Spatial interpolation using thin-plate splines
+    print("Using tps")
+    tps_fit <- Tps(coordinates(sp_select.df), sp_select.df$z_od1)
+    od_raster <- raster::interpolate(sp_interp.raster, tps_fit)
+
+    # Interpolated optical depth for stations
+    z_od1_interpolated_od$OD_interpolated[which(z_od1_interpolated_od$cruise == z_od1_rmse.best$cruise[U])] <- predict(tps_fit, x = coordinates(z_od1_interpolated_od[which(z_od1_interpolated_od$cruise == z_od1_rmse.best$cruise[U]),]))
+  } else {
+    print(U)
+  }
+  od_raster <- mask(od_raster, survey.area)
+  assign(paste("z_od1_raster", z_od1_rmse.best$cruise[U], sep = "_"), od_raster)
+}
+
+z_od1_interpolated_od <- as.data.frame(z_od1_interpolated_od)
+
+
+head(casts.with.z_od1)
+#### Plotting, to be moved elsewhere
+# pdf(file = paste("./figures/", Sys.Date(), "_maptest.pdf", sep = ""), onefile = T)
+
+plot_z_od_map <- function(ann.raster, 
+                          width = 6, 
+                          height = 4, 
+                          name.out, 
+                          pal = rev(viridis_pal()(7)), 
+                          yr = NA, 
+                          breaks = seq(0,70,10), 
+                          legend.lab = expression(italic(Z[0.01]))) {
+  sample_loc.df <- dplyr::select(casts.with.z_od1, vessel, cruise, haul, start_longitude, start_latitude, z_od1, bottom_depth, orientation, quality)
+  coordinates(sample_loc.df) <- c(x = "start_longitude", y = "start_latitude")
+  proj4string(sample_loc.df) <- CRS(race.proj)
+  sample_loc.df <- spTransform(sample_loc.df, aea.proj)
+  
+  png(file = paste("./figures/", name.out, ".png", sep = ""), width = width, height = height, units = "in", res = 300)
+  par(family = "serif", mar = c(4,4,2,6))
+  image(ann.raster, 
+        col = pal, 
+        zlim = range(breaks), 
+        breaks = breaks, 
+        ylim = c(5e5, 1.55e6), 
+        xlim = c(-1.5e6, 0), 
+        xlab = "Easting (m)", 
+        ylab = "Northing (m)",
+        legend.width = 0.8,
+        lab.breaks = breaks)
+  image.plot(col = pal, 
+             zlim = range(breaks), 
+             breaks = breaks,
+             legend.width = 0.5,
+             legend.shrink = 0.9,
+             lab.breaks = breaks,
+             legend.only = T,
+             legend.args = list(text = legend.lab, side = 3, adj = 0.3, padj = -0.25),
+             horizontal = F)
+  plot(bathymetry[1], col = "grey20", ylim = c(5e5, 1.55e6), 
+       xlim = c(-1.5e6, 0), add = T)
+  plot(akland, add = T, col = "grey30", border = "grey30", ylim = c(5e5, 1.55e6), 
+       xlim = c(-1.5e6, 0))
+  plot(survey.area, add = T, col = NA, border = "black")
+  points(subset(sample_loc.df, cruise == as.numeric(paste(yr, "01", sep = ""))), cex = 0.3)
+
+  if(!is.na(yr)) {
+    legend("topright", inset = 0.01, legend = yr, box.col = "white", bg = "white", col = "grey30", adj = 0.27, cex = 1)
+  }
+  dev.off()
+}
+
+
+# Function to assign NA to z_od based on threshold (cases where near-bottom depth is less than z_od)
+od_bottom_cutoff <- function(x, filter.layer, cutoff) {
+  x[filter.layer < cutoff] <- NA
+  return(x)
+}
+
+# hist(z_od1)
+
+# plot(test)
+# test <- od_bottom_cutoff(x = z_od1_raster_200501, filter.layer = od_raster_200501, cutoff = 4.606)
+# 
+# 
+# 
+# range(test@data@values, na.rm = T)
+# image.plot(od_bottom_cutoff(x = z_od1_raster_200401, filter.layer = od_raster_200401, cutoff = 4.606), 
+#       col = rev(brewer.pal(name = "BuPu", 7)),
+#       zlim = c(0, 70), 
+#       breaks = seq(0, 70, 10), 
+#       ylim = c(5e5, 1.55e6), 
+#       xlim = c(-1.5e6, 0), 
+#       xlab = "Easting (m)", 
+#       ylab = "Northing (m)",
+#       legend.width = 0.8,
+#       lab.breaks = seq(0, 70, 10))
+
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_200401, filter.layer = od_raster_200401, cutoff = 4.606), name.out = "shelf_z_od1_2004", yr = 2004, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_200501, filter.layer = od_raster_200501, cutoff = 4.606), name.out = "shelf_z_od1_2005", yr = 2005, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_200601, filter.layer = od_raster_200601, cutoff = 4.606), name.out = "shelf_z_od1_2006", yr = 2006, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_200701, filter.layer = od_raster_200701, cutoff = 4.606), name.out = "shelf_z_od1_2007", yr = 2007, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_200801, filter.layer = od_raster_200801, cutoff = 4.606), name.out = "shelf_z_od1_2008", yr = 2008, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_200901, filter.layer = od_raster_200901, cutoff = 4.606), name.out = "shelf_z_od1_2009", yr = 2009, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_201001, filter.layer = od_raster_201001, cutoff = 4.606), name.out = "shelf_z_od1_2010", yr = 2010, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_201101, filter.layer = od_raster_201101, cutoff = 4.606), name.out = "shelf_z_od1_2011", yr = 2011, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_201201, filter.layer = od_raster_201201, cutoff = 4.606), name.out = "shelf_z_od1_2012", yr = 2012, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_201301, filter.layer = od_raster_201301, cutoff = 4.606), name.out = "shelf_z_od1_2013", yr = 2013, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_201401, filter.layer = od_raster_201401, cutoff = 4.606), name.out = "shelf_z_od1_2014", yr = 2014, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_201501, filter.layer = od_raster_201501, cutoff = 4.606), name.out = "shelf_z_od1_2015", yr = 2015, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od1_raster_201601, filter.layer = od_raster_201601, cutoff = 4.606), name.out = "shelf_z_od1_2016", yr = 2016, pal = rev(brewer.pal(name = "YlOrBr", 7)))
+
+
+z_od1_raster_mean <- mean(
+  od_bottom_cutoff(x = z_od1_raster_200401, filter.layer = od_raster_200401, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_200501, filter.layer = od_raster_200501, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_200601, filter.layer = od_raster_200601, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_200701, filter.layer = od_raster_200701, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_200801, filter.layer = od_raster_200801, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_200901, filter.layer = od_raster_200901, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_201001, filter.layer = od_raster_201001, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_201101, filter.layer = od_raster_201101, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_201201, filter.layer = od_raster_201201, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_201301, filter.layer = od_raster_201301, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_201401, filter.layer = od_raster_201401, cutoff = 2.303),
+  #od_bottom_cutoff(x = z_od1_raster_201501, filter.layer = od_raster_201501, cutoff = 2.303),
+  od_bottom_cutoff(x = z_od1_raster_201601, filter.layer = od_raster_201601, cutoff = 2.303), na.rm = T)
+
+plot_z_od_map(ann.raster = z_od1_raster_mean, name.out = "z_od1_raster_mean", 
+              pal = sequential_hcl(9), breaks = seq(15,60,5), legend.lab = expression(italic(Z[italic(0.01)])))
+
+length(seq(5,70,5))
+
+
+mean_z_od1_by_year <- data.frame(year = 2004:2016,
+                              mean_z_od1  = c(mean(z_od1_raster_200401@data@values, na.rm = T),
+                                           mean(z_od1_raster_200501@data@values, na.rm = T),
+                                           mean(z_od1_raster_200601@data@values, na.rm = T),
+                                           mean(z_od1_raster_200701@data@values, na.rm = T),
+                                           mean(z_od1_raster_200801@data@values, na.rm = T),
+                                           mean(z_od1_raster_200901@data@values, na.rm = T),
+                                           mean(z_od1_raster_201001@data@values, na.rm = T),
+                                           mean(z_od1_raster_201101@data@values, na.rm = T),
+                                           mean(z_od1_raster_201201@data@values, na.rm = T),
+                                           mean(z_od1_raster_201301@data@values, na.rm = T),
+                                           mean(z_od1_raster_201401@data@values, na.rm = T),
+                                           mean(z_od1_raster_201501@data@values, na.rm = T),
+                                           mean(z_od1_raster_201601@data@values, na.rm = T)))
+
+ggplot() + geom_point(data = mean_z_od1_by_year, aes(x = year, y = mean_z_od1))
+
+area_z_od1_by_year <- data.frame(year = c(rep(2004, 250000),
+                                       rep(2005, 250000),
+                                       rep(2006, 250000),
+                                       rep(2007, 250000),
+                                       rep(2008, 250000),
+                                       rep(2009, 250000),
+                                       rep(2010, 250000),
+                                       rep(2011, 250000),
+                                       rep(2012, 250000),
+                                       rep(2013, 250000),
+                                       rep(2014, 250000),
+                                       rep(2015, 250000),
+                                       rep(2016, 250000)),
+                              z_od1  = c(z_od1_raster_201601@data@values, 
+                                      z_od1_raster_201501@data@values,
+                                      z_od1_raster_201401@data@values,
+                                      z_od1_raster_201301@data@values, 
+                                      z_od1_raster_201201@data@values,
+                                      z_od1_raster_201101@data@values,
+                                      z_od1_raster_201001@data@values,
+                                      z_od1_raster_200901@data@values,
+                                      z_od1_raster_200801@data@values,
+                                      z_od1_raster_200701@data@values,
+                                      z_od1_raster_200601@data@values,
+                                      z_od1_raster_200501@data@values,
+                                      z_od1_raster_200401@data@values))
+area_z_od1_by_year <- area_z_od1_by_year[complete.cases(area_z_od1_by_year),]
+area_z_od1_by_year$OD <- 4.606
+
+
+
+
+
+
+#=======================================================
+#=======================================================
+#=======================================================
+# Z_OD10
+#=======================================================
+#=======================================================
+#=======================================================
+
+
+whole.col.analysis$z_od10 <- as.numeric(whole.col.analysis$z_od10)
+casts.with.z_od10 <- subset(whole.col.analysis, !is.na(z_od10))
+
+for(h in 1:length(cruises)) {
+  # Initialize optical depth spatial data frame for kriginging
+  sp_interp.df <- subset(dplyr::select(casts.with.z_od10, vessel, cruise, haul, start_longitude, start_latitude, z_od10, bottom_depth), cruise == cruises[h])
+  coordinates(sp_interp.df) <- c(x = "start_longitude", y = "start_latitude")
+  proj4string(sp_interp.df) <- CRS(race.proj)
+  sp_interp.df <- spTransform(sp_interp.df, aea.proj)
+  
+  null.rmse <- RMSE(mean(sp_interp.df$z_od10), sp_interp.df$z_od10)
+  kpart <- 5 # Partitions for cv
+  iter <- 999 # Iterations 
+  nm <- 12 # Only use the eight closest stations for distance-weighting methods
+  
+  # Initialize vectors to store bootstrap RMSE
+  idw.rmse.mean <- rep(NA, iter)
+  tps.rmse.mean <- rep(NA, iter)
+  exp.rmse.mean <- rep(NA, iter)
+  sph.rmse.mean <- rep(NA, iter)
+  bes.rmse.mean <- rep(NA, iter)
+  cir.rmse.mean <- rep(NA, iter)
+  gau.rmse.mean <- rep(NA, iter)
+  mat.rmse.mean <- rep(NA, iter)
+  ste.rmse.mean <- rep(NA, iter)
+  nn.rmse.mean <- rep(NA, iter)
+  
+  for(i in 1:iter) {
+    kf <- kfold(sp_interp.df, kpart)
+    fit_test <- sp_interp.df[kf == 1, ]
+    train <- sp_interp.df[kf != 1, ]
+    
+    # Nearest-neighbor
+    nn_fit <- gstat(formula = z_od10~1, locations = train, set = list(idp = 0), nmax = nm)
+    nn.predict <- predict(nn_fit, fit_test)
+    nn.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = nn.predict$var1.pred))
+    
+    # IDW
+    idw_fit <- gstat(formula = z_od10~1, locations = train, nmax = nm)
+    idw.predict <- predict(idw_fit, fit_test)
+    idw.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = idw.predict$var1.pred))
+    
+    # Ordinary kriging
+    exp.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Exp")))
+    exp.k_fit <- gstat(formula = z_od10~1, locations = train, model = exp.vgfit_train, nmax = nm)
+    exp.k.predict <- predict(exp.k_fit, fit_test)
+    exp.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = exp.k.predict$var1.pred))
+    
+    sph.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Sph")))
+    sph.k_fit <- gstat(formula = z_od10~1, locations = train, model = sph.vgfit_train, nmax = nm)
+    sph.k.predict <- predict(sph.k_fit, fit_test)
+    sph.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = sph.k.predict$var1.pred))
+    
+    bes.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Bes")))
+    bes.k_fit <- gstat(formula = z_od10~1, locations = train, model = bes.vgfit_train, nmax = nm)
+    bes.k.predict <- predict(bes.k_fit, fit_test)
+    bes.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = bes.k.predict$var1.pred))
+    
+    gau.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Gau")))
+    gau.k_fit <- gstat(formula = z_od10~1, locations = train, model = gau.vgfit_train, nmax = nm)
+    gau.k.predict <- predict(gau.k_fit, fit_test)
+    gau.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = gau.k.predict$var1.pred))
+    
+    cir.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Cir")))
+    cir.k_fit <- gstat(formula = z_od10~1, locations = train, model = cir.vgfit_train, nmax = nm)
+    cir.k.predict <- predict(cir.k_fit, fit_test)
+    cir.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = cir.k.predict$var1.pred))
+    
+    mat.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Mat")))
+    mat.k_fit <- gstat(formula = z_od10~1, locations = train, model = mat.vgfit_train, nmax = nm)
+    mat.k.predict <- predict(mat.k_fit, fit_test)
+    mat.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = mat.k.predict$var1.pred))
+    
+    ste.vgfit_train <- fit.variogram(variogram(idw_fit), vgm(c("Ste")))
+    ste.k_fit <- gstat(formula = z_od10~1, locations = train, model = ste.vgfit_train, nmax = nm)
+    ste.k.predict <- predict(ste.k_fit, fit_test)
+    ste.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = ste.k.predict$var1.pred))
+    
+    # TPS
+    tps_fit <- Tps(coordinates(train), train$z_od10)
+    tps.predict <- predict(tps_fit, coordinates(fit_test))
+    tps.rmse.mean[i] <- mean(RMSE(observed = fit_test$z_od10, predicted = tps.predict[,1]))
+    
+  }
+  
+  sp_compare.rmse <- data.frame(nn = nn.rmse.mean, 
+                                idw = idw.rmse.mean, 
+                                Exp = exp.rmse.mean,
+                                Sph = sph.rmse.mean,
+                                Cir = cir.rmse.mean,
+                                Gau = gau.rmse.mean,
+                                Bes = bes.rmse.mean,
+                                Mat = mat.rmse.mean,
+                                Ste = ste.rmse.mean,
+                                Tps = tps.rmse.mean)
+  sp_compare.rmse$cruise <- cruises[h]
+  
+  spatial_fit <- rbind.fill(spatial_fit, sp_compare.rmse)
+  
+}
+
+spatial_z_od10 <- melt(spatial_fit, id.vars = c("cruise"))
+z_od10_cv_8020 <- spatial_z_od10
+write.csv(z_od10_cv_8020, file = "./output/spatial_z_od10_rmse8020.csv", row.names = F)
+
+#===========================================
+# END CROSS-VALIDATION
+#===========================================
+
+z_od10_rmse.df <- aggregate(data = z_od10_cv_8020, value ~ variable + cruise, mean) # Average RMSE by method
+z_od10_rmse.min <- aggregate(data = z_od10_rmse.df, value ~ cruise, min)
+z_od10_rmse.best <- inner_join(z_od10_rmse.df, z_od10_rmse.min)
+z_od10_rmse.count <- data.frame(table(casts.with.z_od10$cruise))
+names(z_od10_rmse.count) <- c("cruise", "n.stations")
+z_od10_rmse.best <- merge(z_od10_rmse.best, z_od10_rmse.count)
+
+
+z_od10_rmse.best$best <- "Lowest"
+z_od10_cv_8020 <- full_join(z_od10_cv_8020, select(z_od10_rmse.best, cruise, variable, best))
+z_od10_cv_8020$method <- z_od10_cv_8020$variable
+levels(z_od10_cv_8020$method) <- c("NN", "IDW", "OK-EXP", "OK-SPH", "OK-CIR", "OK-GAU", "OK-BES", "OK-MAT", "OK-STE", "TPS")
+
+# Offset RMSE for plotting
+z_od10_rmse.df <- merge(z_od10_rmse.df, data.frame(variable = unique(z_od10_rmse.df$variable), offset = seq(0, 0.72, 0.08)))
+
+# VIOLIN PLOT OF RMSE
+
+png(file = "./figures/z_od10_rmse_violin.png", width = 9, height = 6, units = "in", res = 300)
+ggplot() + geom_violin(data = z_od10_cv_8020, aes(x = factor(floor(cruise/100)), y = value, fill = best)) + 
+  scale_fill_manual(values = c("#F00F00", NA), guide = F) +
+  scale_x_discrete(name = "Year") +
+  scale_y_continuous(name = expression(paste("Root-mean-square error ", italic(OD[nb])))) +
+  facet_wrap(~method) +
+  theme(panel.background = element_rect(fill = NA, color = "black"),
+        panel.border = element_rect(fill = NA, color = "black"),
+        axis.text = element_text(family = "serif", size = 12),
+        axis.title = element_text(family = "serif", size = 12),
+        axis.text.x = element_text(family = "serif", size = 12, angle = 90, hjust = 1, vjust = 0.5),
+        legend.title = element_text(family = "serif", size = 12),
+        legend.text = element_text(family = "serif", size = 12),
+        strip.text = element_text(family = "serif", size = 12),
+        legend.position = "bottom")
+dev.off()
+
+# Station-specific interpolation
+z_od10_interpolated_od <- inner_join(haul_time_position, unique(dplyr::select(casts.with.z_od10, vessel, cruise)))
+z_od10_interpolated_od <- subset(z_od10_interpolated_od, performance >= 0 & haul_type == 3)
+z_od10_interpolated_od$stationid <- factor(z_od10_interpolated_od$stationid)
+coordinates(z_od10_interpolated_od) <- c(x = "start_longitude", y = "start_latitude")
+proj4string(z_od10_interpolated_od) <- CRS(race.proj)
+z_od10_interpolated_od <- spTransform(z_od10_interpolated_od, aea.proj)
+z_od10_interpolated_od$OD_interpolated <- NA
+
+for(U in 11:12) { #1:nrow(z_od10_rmse.best)
+  sp_select.df <- subset(dplyr::select(casts.with.z_od10, vessel, cruise, haul, start_longitude, start_latitude, z_od10, bottom_depth), cruise == rmse.best$cruise[U])
+  coordinates(sp_select.df) <- c(x = "start_longitude", y = "start_latitude")
+  proj4string(sp_select.df) <- CRS(race.proj)
+  sp_select.df <- spTransform(sp_select.df, aea.proj)
+  
+  if(z_od10_rmse.best$variable[U] %in% c("idw", "Exp", "Sph", "Bes", "Gau", "Cir", "Mat", "Ste")) { # Spatial interpolation using ordinary kriging
+    best.k_fit <- gstat(formula = z_od10~1, locations = sp_select.df, nmax = nm)
+    
+    if(z_od10_rmse.best$variable[U] != "idw") {
+      best.vgfit <- fit.variogram(variogram(best.k_fit), vgm(as.character(z_od10_rmse.best$variable[U])))
+      best.k_fit <- gstat(formula = z_od10~1, locations = sp_select.df, model = best.vgfit, nmax = nm)
+    }
+    
+    od_raster <- predict(best.k_fit, as(sp_interp.raster, "SpatialGrid"))
+    od_raster <- raster(od_raster)
+    z_od10_interpolated_od$OD_interpolated[which(z_od10_interpolated_od$cruise == z_od10_rmse.best$cruise[U])] <- 
+      predict(best.k_fit, z_od10_interpolated_od[which(z_od10_interpolated_od$cruise == z_od10_rmse.best$cruise[U]),])$var1.pred
+  } else if(z_od10_rmse.best$variable[U] == "Tps") { # Spatial interpolation using thin-plate splines
+    print("Using tps")
+    tps_fit <- Tps(coordinates(sp_select.df), sp_select.df$z_od10)
+    od_raster <- raster::interpolate(sp_interp.raster, tps_fit)
+    
+    # Interpolated optical depth for stations
+    z_od10_interpolated_od$OD_interpolated[which(z_od10_interpolated_od$cruise == z_od10_rmse.best$cruise[U])] <- predict(tps_fit, x = coordinates(z_od10_interpolated_od[which(z_od10_interpolated_od$cruise == z_od10_rmse.best$cruise[U]),]))
+  } else if (z_od10_rmse.best$variable[U] == "nn") {
+    print("hi")
+    nn_fit <- gstat(formula = z_od10~1, locations = sp_select.df, set = list(idp = 0), nmax = nm)
+    od_raster <- predict(nn_fit, as(sp_interp.raster, "SpatialGrid"))
+    od_raster <- raster(od_raster)
+    z_od10_interpolated_od$OD_interpolated[which(z_od10_interpolated_od$cruise == z_od10_rmse.best$cruise[U])] <- 
+      predict(nn_fit, z_od10_interpolated_od[which(z_od10_interpolated_od$cruise == z_od10_rmse.best$cruise[U]),])$var1.pred
+  } else {
+    print(U)
+  }
+  od_raster <- mask(od_raster, survey.area)
+  assign(paste("z_od10_raster", z_od10_rmse.best$cruise[U], sep = "_"), od_raster)
+}
+
+# z_od10_interpolated_od <- as.data.frame(z_od10_interpolated_od)
+
+
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_200401, filter.layer = od_raster_200401, cutoff = 2.303), name.out = "shelf_z_od10_2004", yr = 2004, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_200501, filter.layer = od_raster_200501, cutoff = 2.303), name.out = "shelf_z_od10_2005", yr = 2005, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_200601, filter.layer = od_raster_200601, cutoff = 2.303), name.out = "shelf_z_od10_2006", yr = 2006, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_200701, filter.layer = od_raster_200701, cutoff = 2.303), name.out = "shelf_z_od10_2007", yr = 2007, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_200801, filter.layer = od_raster_200801, cutoff = 2.303), name.out = "shelf_z_od10_2008", yr = 2008, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_200901, filter.layer = od_raster_200901, cutoff = 2.303), name.out = "shelf_z_od10_2009", yr = 2009, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_201001, filter.layer = od_raster_201001, cutoff = 2.303), name.out = "shelf_z_od10_2010", yr = 2010, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_201101, filter.layer = od_raster_201101, cutoff = 2.303), name.out = "shelf_z_od10_2011", yr = 2011, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_201201, filter.layer = od_raster_201201, cutoff = 2.303), name.out = "shelf_z_od10_2012", yr = 2012, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_201301, filter.layer = od_raster_201301, cutoff = 2.303), name.out = "shelf_z_od10_2013", yr = 2013, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_201401, filter.layer = od_raster_201401, cutoff = 2.303), name.out = "shelf_z_od10_2014", yr = 2014, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_201501, filter.layer = od_raster_201501, cutoff = 2.303), name.out = "shelf_z_od10_2015", yr = 2015, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+plot_z_od_map(ann.raster = od_bottom_cutoff(x = z_od10_raster_201601, filter.layer = od_raster_201601, cutoff = 2.303), name.out = "shelf_z_od10_2016", yr = 2016, pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5))
+
+z_od10_raster_mean <- mean(
+od_bottom_cutoff(x = z_od10_raster_200401, filter.layer = od_raster_200401, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_200501, filter.layer = od_raster_200501, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_200601, filter.layer = od_raster_200601, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_200701, filter.layer = od_raster_200701, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_200801, filter.layer = od_raster_200801, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_200901, filter.layer = od_raster_200901, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_201001, filter.layer = od_raster_201001, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_201101, filter.layer = od_raster_201101, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_201201, filter.layer = od_raster_201201, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_201301, filter.layer = od_raster_201301, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_201401, filter.layer = od_raster_201401, cutoff = 2.303),
+#od_bottom_cutoff(x = z_od10_raster_201501, filter.layer = od_raster_201501, cutoff = 2.303),
+od_bottom_cutoff(x = z_od10_raster_201601, filter.layer = od_raster_201601, cutoff = 2.303), na.rm = T)
+
+plot_z_od_map(ann.raster = z_od10_raster_mean, name.out = "z_od10_raster_mean", pal = rev(brewer.pal(name = "YlOrBr", 9)), breaks = seq(0,45,5), legend.lab = expression(italic(Z[italic(0.1)])))
+
+
+
+
+mean_z_od10_by_year <- data.frame(year = 2004:2016,
+                                 mean_z_od10  = c(mean(z_od10_raster_200401@data@values, na.rm = T),
+                                                 mean(z_od10_raster_200501@data@values, na.rm = T),
+                                                 mean(z_od10_raster_200601@data@values, na.rm = T),
+                                                 mean(z_od10_raster_200701@data@values, na.rm = T),
+                                                 mean(z_od10_raster_200801@data@values, na.rm = T),
+                                                 mean(z_od10_raster_200901@data@values, na.rm = T),
+                                                 mean(z_od10_raster_201001@data@values, na.rm = T),
+                                                 mean(z_od10_raster_201101@data@values, na.rm = T),
+                                                 mean(z_od10_raster_201201@data@values, na.rm = T),
+                                                 mean(z_od10_raster_201301@data@values, na.rm = T),
+                                                 mean(z_od10_raster_201401@data@values, na.rm = T),
+                                                 mean(z_od10_raster_201501@data@values, na.rm = T),
+                                                 mean(z_od10_raster_201601@data@values, na.rm = T)))
+
+area_z_od10_by_year <- data.frame(year = c(rep(2004, 250000),
+                                          rep(2005, 250000),
+                                          rep(2006, 250000),
+                                          rep(2007, 250000),
+                                          rep(2008, 250000),
+                                          rep(2009, 250000),
+                                          rep(2010, 250000),
+                                          rep(2011, 250000),
+                                          rep(2012, 250000),
+                                          rep(2013, 250000),
+                                          rep(2014, 250000),
+                                          rep(2015, 250000),
+                                          rep(2016, 250000)),
+                                 z_od10  = c(z_od10_raster_201601@data@values, 
+                                            z_od10_raster_201501@data@values,
+                                            z_od10_raster_201401@data@values,
+                                            z_od10_raster_201301@data@values, 
+                                            z_od10_raster_201201@data@values,
+                                            z_od10_raster_201101@data@values,
+                                            z_od10_raster_201001@data@values,
+                                            z_od10_raster_200901@data@values,
+                                            z_od10_raster_200801@data@values,
+                                            z_od10_raster_200701@data@values,
+                                            z_od10_raster_200601@data@values,
+                                            z_od10_raster_200501@data@values,
+                                            z_od10_raster_200401@data@values))
+area_z_od10_by_year <- area_z_od10_by_year[complete.cases(area_z_od10_by_year),]
+
+
+mean_z_od10_by_year$OD <- 2.303
+mean_z_od1_by_year$OD <- 4.606
+mean_z_od10_by_year$OD <- expression(italic(Z[0.1]))
+mean_z_od1_by_year$OD <- expression(italic(Z[0.01]))
+names(mean_z_od10_by_year)[2] <- "z_od"
+names(mean_z_od1_by_year)[2] <- "z_od"
+
+# Plot of z_od time series
+png(file = "./figures/z_od_timeseries.png", width = 4, height = 4, units = "in", res = 300)
+ggplot() + 
+  geom_point(data = subset(rbind(mean_z_od10_by_year, mean_z_od1_by_year), year != 2015), aes(x = year, y = z_od, color = factor(OD), shape = factor(OD), linetype = factor(OD)), size = rel(2.2)) +
+  geom_line(data = subset(rbind(mean_z_od10_by_year, mean_z_od1_by_year), year != 2015), aes(x = year, y = z_od, color = factor(OD), shape = factor(OD), linetype = factor(OD)), size = rel(1.2)) +
+  scale_color_manual(values = c("#d7301f", "#fc8d59"), labels = expression(italic(Z[0.1]), italic(Z[0.01]))) +
+  scale_linetype_manual(values = c(1,3), labels = expression(italic(Z[0.1]), italic(Z[0.01]))) +
+  scale_shape(labels = expression(italic(Z[0.1]), italic(Z[0.01]))) +
+  scale_y_continuous(name = "Depth (m)", limits = c(10, 42), expand = c(0,0)) +
+  scale_x_continuous(name = "Year", breaks = seq(2004, 2016, 1), limits = c(2003.9, 2016.1), expand = c(0,0)) +
+  theme(panel.background = element_rect(fill = NA, color = "black"),
+        panel.border = element_rect(fill = NA, color = "black"),
+        axis.text = element_text(family = "serif", size = 12),
+        axis.title = element_text(family = "serif", size = 12),
+        axis.text.x = element_text(family = "serif", size = 12, angle = 90, hjust = 1, vjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(family = "serif", size = 12),
+        strip.text = element_text(family = "serif", size = 12),
+        legend.position = "bottom")
+dev.off()
+
+range(mean_z_od10_by_year$z_od[-12])
+range(mean_z_od1_by_year$z_od[-12])
+range(mean_od_by_year$mean_od[-12])
+
+mean(mean_z_od10_by_year$z_od[-12])
+mean(mean_z_od1_by_year$z_od[-12])
+mean(mean_od_by_year$mean_od[-12])
+
+# Long term trend?
+summary(lm(mean_od~year, data = subset(mean_od_by_year, year != 2015)))
+summary(lm(z_od~year, data = subset(mean_z_od10_by_year, year != 2015)))
+summary(lm(z_od~year, data = subset(mean_z_od1_by_year, year != 2015)))
+?cor
+
+cor(mean_od_by_year$year[-12], mean_od_by_year$mean_od[-12])
+cor(mean_z_od10_by_year$year[-12], mean_z_od10_by_year$z_od[-12])
+cor(mean_z_od1_by_year$year[-12], mean_z_od1_by_year$z_od[-12])

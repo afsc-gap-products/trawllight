@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1532457648014.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "178016428",
+    "id" : "D4FB2428",
+    "lastKnownWriteTime" : 1534963023,
+    "last_content_update" : 1534963023223,
+    "path" : "D:/Projects/OneDrive/afsc/Light data processing/trawllight/R/filter_stepwise.R",
+    "project_path" : "R/filter_stepwise.R",
+    "properties" : {
+        "cursorPosition" : "8,97",
+        "scrollLine" : "0",
+        "tempName" : "Untitled2"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,26 @@
+### Testing functions 
+
+# Import data
+
+test.casts <- read.csv("D:/Projects/OneDrive/Thesis/Chapter 1 - Visual Foraging Condition in the Eastern Bering Sea/data/LightData/Data/year_08/ebs/v_89/corr_MK9hauls.csv")
+test.times <- read.csv("D:/Projects/OneDrive/Thesis/Chapter 1 - Visual Foraging Condition in the Eastern Bering Sea/data/LightData/Data/year_08/ebs/v_89/CastTimes.csv")
+
+test.casts$ctime <- as.POSIXct(strptime(test.casts$ctime, format = "%Y-%m-%d %H:%M:%S"))
+test.times$downcast_start <- as.POSIXct(strptime(test.times$downcast_start, format = "%Y-%m-%d %H:%M:%S")) - 20
+test.times$downcast_end <- as.POSIXct(strptime(test.times$downcast_end, format = "%Y-%m-%d %H:%M:%S")) + 20
+test.times$upcast_start <- as.POSIXct(strptime(test.times$upcast_start, format = "%Y-%m-%d %H:%M:%S")) - 20 
+test.times$upcast_end <- as.POSIXct(strptime(test.times$upcast_end, format = "%Y-%m-%d %H:%M:%S")) + 20
+
+test.vert <- vertical_profiles(light.data = test.casts, 
+                          cast.data = subset(test.times, haul == 13))
+test.vert <- subset(test.vert, updown == "Downcast")
+names(test.vert)[which(names(test.vert) == "cdepth")] <- "z"
+
+test.vert$light_tight <- convert_light(test.vert$llight)
+
+test.filter_stepwise <- filter_stepwise(cast.data = test.vert, agg.fun = "median", light.col = "light_tight", depth.col = "z")
+head(test.filter_stepwise)
+
+test.calculate_attenuation <- calculate_attenuation(x = test.filter_stepwise, light.col = "light_tight", depth.col = "z")
+
+test.light_proportion <- light_proportion(x = test.vert, light.col = "light_tight", depth.col = "z")

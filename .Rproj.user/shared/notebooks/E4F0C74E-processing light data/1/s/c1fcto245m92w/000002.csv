@@ -1,0 +1,52 @@
+"0","```r
+calculate_attenuation <- function(x, loess.criterion = \"aicc\", loess.degree = 1, ...) {
+  hauls <- unique(x$haul)
+  # Data frame to store depth-specific attenuation
+  output <- data.frame(haul = numeric(), 
+                       depth = numeric(), 
+                       k_aicc = numeric(),
+                       quality = numeric()
+                       )
+  # Data frame to store profile fit 
+  fit.metrics <- data.frame(haul = numeric(),
+                            aicc_span_fit = numeric(),
+                            aicc_nobs = numeric(),
+                            aicc_enp = numeric(),
+                            aicc_rse = numeric(),
+                            aicc_smooth_trace = numeric())
+  
+  # Calculate attenuation for each profile
+  for(p in 1:length(hauls)) { 
+    
+    # Select profile
+    active.haul <- subset(x, haul == hauls[p])
+    
+    # Remove profiles with only a small portion of the water column sampled
+    minimum_depth_range <- 10
+    
+    if((max(active.haul$cdepth) - min(active.haul$cdepth)) > minimum_depth_range) {
+      profile_light_aicc <- loess.as2(x = active.haul$cdepth, y = log(active.haul$trans_llight), criterion = loess.criterion, degree = loess.degree)
+      number.obs <- nrow(active.haul)
+      
+      # Output data
+      append.output <- data.frame(haul = rep(hauls[p], number.obs-1), 
+                                  depth = (active.haul$cdepth[2:number.obs] + active.haul$cdepth[1:(number.obs - 1)]) / 2,
+                                  k_aicc = diff(profile_light_aicc$fitted) / diff(active.haul$cdepth))
+      
+      append.output$quality <- active.haul$quality[1]
+      
+      output <- rbind(output, append.output)
+      
+      append.fit.metrics <- data.frame(haul = hauls[p],
+                                       aicc_span_fit = profile_light_aicc$pars$span,
+                                       aicc_nobs = profile_light_aicc$n,
+                                       aicc_enp = profile_light_aicc$enp,
+                                       aicc_rse = profile_light_aicc$s,
+                                       aicc_smooth_trace = profile_light_aicc$trace.hat)
+      fit.metrics <- rbind(fit.metrics, append.fit.metrics)
+    }
+  }
+  output_dfs <- list(fit_light = fit.metrics, attenuation = output)
+  return(output_dfs)
+}
+```"

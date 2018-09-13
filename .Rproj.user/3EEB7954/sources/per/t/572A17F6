@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1532471736117.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2445665264",
+    "id" : "572A17F6",
+    "lastKnownWriteTime" : 1533136270,
+    "last_content_update" : 1533136270,
+    "path" : "D:/Projects/OneDrive/Thesis/Chapter 1 - Visual Foraging Condition in the Eastern Bering Sea/od_depths.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "268,32",
+        "docOutlineVisible" : "0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

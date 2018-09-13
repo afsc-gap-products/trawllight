@@ -1,0 +1,35 @@
+"0","```r
+light_ratio <- function(x) {
+  hauls <- unique(x$haul)
+  
+  # Initiate data frame
+  output <- data.frame(haul = numeric(), 
+                       cdepth = numeric(), 
+                       updown = character(),
+                       llight = numeric(),
+                       trans_llight = numeric(),
+                       light_ratio = numeric(),
+                       ldepth = numeric(),
+                       ltemp = numeric(),
+                       quality = numeric(),
+                       k_linear = numeric(),
+                       k_column = numeric())
+  
+  for(u in 1:length(hauls)) {
+    active.haul <- subset(x, haul == hauls[u])
+    
+    # Light ratio relative to shallowest bin.
+    active.haul$light_ratio <- active.haul$trans_llight / max(active.haul$trans_llight, na.rm = T)
+    
+    # Linear attenuation coefficient relative to shallowest bin.
+    active.haul$k_linear <- log(active.haul$trans_llight/max(active.haul$trans_llight)) / (min(active.haul$cdepth) - active.haul$cdepth)
+    
+    # Whole column attenuation coefficient.
+    active.haul$k_column <- rep((log(min(active.haul$trans_llight)/max(active.haul$trans_llight))) / (min(active.haul$cdepth) - max(active.haul$cdepth)), nrow(active.haul))
+    
+    # Append output
+    output <- rbind(output, active.haul)
+  }
+  return(output)
+}
+```"

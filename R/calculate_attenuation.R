@@ -1,0 +1,63 @@
+#' Instantaneous diffuse attenuation coefficient of downwelling irradiance
+#'
+#' \code{calculate_attenuation} fits a loess model between depth and light using an AICc-based span selection model adapated from \code{fANCOVA::loess.as}, then estimates the first derivative of the resultant model slope to approximate the instantaneous diffuse attenuation coefficient of downwelling irradiance.
+#'
+#' @param x Data frame containing depth and light for a single cast.
+#' @param loess.criterion Criterion for choosing the most parsimonious model. Options are bias-corrected Akaike's Information Criterion ("aicc") or generalized cross-validation ("gcv").
+#' @param loess.degree Degrees for loess model. Default = 1.
+#' @param kz.binsize Depth interval for estimating instantaneous diffuse attenuation coefficient of downwelling irradiance. Default = 0.2.
+#' @param min.range Minimum range of depths necessary for model fitting. Default = 10.
+#' @param ... Additional arguments passed to loess fitting function
+#' @return Returns a list containing three data frames: \code{attenuation} contains depth and fitted attenuation values, \code{loess.fit} contains the model summary statistics, and \code{fit_residuals} contains model fit residuals.
+#'
+#' @author S.K. Rohan \email{skrohan@@uw.edu}
+#'
+#' @references Hurvich, C.M., Simonoff, J.S., and Tsai, C.-L. 1998. Smoothing parameter selection in nonparametric regression using an improved Akaike information criterion. J. R. Stat. Soc. B 60(2): 271-293.
+#' @references Xiao-Feng Wang (2010). fANCOVA: Nonparametric Analysis of Covariance. R package version 0.5-1. https://CRAN.R-project.org/package=fANCOVA
+
+
+calculate_attenuation <- function(x, light.col = "trans_llight", depth.col = "cdepth", loess.criterion = "aicc", loess.degree = 1, kz.binsize = 0.2, min.range = 10, ...) {
+
+  names(x)[which(names(x) == light.col)] <- "trans_llight"
+  names(x)[which(names(x) == depth.col)] <- "cdepth"
+
+  # Remove profiles with only a small portion of the water column sampled
+
+  if((max(x$cdepth) - min(x$cdepth)) > min.range) {
+
+    # Fit loess model to curve
+    N_depths <- seq(min(min(x$cdepth)), max(x$cdepth), kz.binsize)
+    profile_light_loess <- loess.as2(x = x$cdepth, y = log(x$trans_llight), criterion = loess.criterion, degree = loess.degree, ...)
+    light_fit <- predict(profile_light_loess, newdata = N_depths)
+
+    # Output data
+    output <- data.frame(depth =  N_depths[1:(length(N_depths)-1)] + kz.binsize / 2,
+                         k_aicc = diff(light_fit) /kz.binsize)
+
+    # output$vessel <- x$vessel[1]
+    # output$cruise <- x$cruise[1]
+    # output$haul <- x$haul[1]
+    # output$quality <- x$quality[1]
+
+    loess.fit <- data.frame(span_fit = profile_light_loess$pars$span,
+                            nobs = profile_light_loess$n,
+                            enp = profile_light_loess$enp,
+                            rse = profile_light_loess$s,
+                            smooth_trace = profile_light_loess$trace.hat,
+                            fit_method = loess.criterion)
+    # loess.fit$vessel <- x$vessel[1]
+    # loess.fit$cruise <- x$cruise[1]
+    # loess.fit$haul <- x$haul[1]
+
+    # Output residuals
+    resids <- data.frame(residual = residuals(profile_light_loess),
+                         log_trans_llight = log(x$trans_llight),
+                         cdepth = x$cdepth)
+    # resids$vessel <- x$vessel[1]
+    # resids$cruise <- x$cruise[1]
+    # resids$haul <- x$haul[1]
+
+    output_dfs <- list(fit_atten = loess.fit, attenuation = output, fit_residuals = resids)
+    return(output_dfs)
+  }
+}

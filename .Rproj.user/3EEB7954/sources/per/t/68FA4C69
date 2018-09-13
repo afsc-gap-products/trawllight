@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1534974832635.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1452790953",
+    "id" : "68FA4C69",
+    "lastKnownWriteTime" : 1535185483,
+    "last_content_update" : 1535185483084,
+    "path" : "D:/Projects/OneDrive/afsc/Light data processing/trawllight/vignettes/trawllight.Rmd",
+    "project_path" : "vignettes/trawllight.Rmd",
+    "properties" : {
+        "cursorPosition" : "4,24",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 15,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
