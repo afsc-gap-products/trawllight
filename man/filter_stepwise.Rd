@@ -4,8 +4,8 @@
 \alias{filter_stepwise}
 \title{Bin and filter light measurements}
 \usage{
-filter_stepwise(cast.data, light.col, depth.col, bin.size = 2, bin.gap = 6,
-  agg.fun, ...)
+filter_stepwise(cast.data, light.col, depth.col, id.cols = c("vessel",
+  "cruise", "haul", "updown"), bin.size = 2, bin.gap = 6, agg.fun, ...)
 }
 \arguments{
 \item{cast.data}{Data frame containing light measurements and depth.}

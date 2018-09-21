@@ -16,16 +16,23 @@
 #' @references Xiao-Feng Wang (2010). fANCOVA: Nonparametric Analysis of Covariance. R package version 0.5-1. https://CRAN.R-project.org/package=fANCOVA
 
 
-calculate_attenuation <- function(x, light.col = "trans_llight", depth.col = "cdepth", loess.criterion = "aicc", loess.degree = 1, kz.binsize = 0.2, min.range = 10, ...) {
+calculate_attenuation <- function(x,
+                                  light.col = "trans_llight",
+                                  depth.col = "cdepth",
+                                  loess.criterion = "aicc",
+                                  loess.degree = 1,
+                                  kz.binsize = 0.2,
+                                  min.range = 10, ...) {
 
   names(x)[which(names(x) == light.col)] <- "trans_llight"
   names(x)[which(names(x) == depth.col)] <- "cdepth"
 
   # Remove profiles with only a small portion of the water column sampled
 
-  if((max(x$cdepth) - min(x$cdepth)) > min.range) {
+  if((max(x$cdepth) - min(x$cdepth)) > min.range) { # Do not fit if depth range is < min.range
+    if(length(unique(x$cdepth)) > 3) { # Cannot fit loess to fewer than three data points
 
-    # Fit loess model to curve
+    # Fit loess model
     N_depths <- seq(min(min(x$cdepth)), max(x$cdepth), kz.binsize)
     profile_light_loess <- loess.as2(x = x$cdepth, y = log(x$trans_llight), criterion = loess.criterion, degree = loess.degree, ...)
     light_fit <- predict(profile_light_loess, newdata = N_depths)
@@ -34,30 +41,26 @@ calculate_attenuation <- function(x, light.col = "trans_llight", depth.col = "cd
     output <- data.frame(depth =  N_depths[1:(length(N_depths)-1)] + kz.binsize / 2,
                          k_aicc = diff(light_fit) /kz.binsize)
 
-    # output$vessel <- x$vessel[1]
-    # output$cruise <- x$cruise[1]
-    # output$haul <- x$haul[1]
-    # output$quality <- x$quality[1]
-
     loess.fit <- data.frame(span_fit = profile_light_loess$pars$span,
                             nobs = profile_light_loess$n,
                             enp = profile_light_loess$enp,
                             rse = profile_light_loess$s,
                             smooth_trace = profile_light_loess$trace.hat,
                             fit_method = loess.criterion)
-    # loess.fit$vessel <- x$vessel[1]
-    # loess.fit$cruise <- x$cruise[1]
-    # loess.fit$haul <- x$haul[1]
 
     # Output residuals
     resids <- data.frame(residual = residuals(profile_light_loess),
                          log_trans_llight = log(x$trans_llight),
                          cdepth = x$cdepth)
-    # resids$vessel <- x$vessel[1]
-    # resids$cruise <- x$cruise[1]
-    # resids$haul <- x$haul[1]
 
     output_dfs <- list(fit_atten = loess.fit, attenuation = output, fit_residuals = resids)
     return(output_dfs)
+    } else {
+      warning("calculate_attenuation: Cannot fit loess. Cast has fewer than three Unique depth bins.")
+      return(NULL)
+    }
+  } else {
+    warning("calculate_attenuation: Did not fit loess. Total depth range of cast < min.range.")
+    return(NULL)
   }
 }

@@ -9,20 +9,30 @@
 #' @param ... Additional arguments passed to findInterval function for binning light measurements
 #' @return Data frame with light by depth bin and continuity grade (1 = Good, -999 = Bad)
 
-filter_stepwise <- function(cast.data, light.col, depth.col, bin.size = 2, bin.gap = 6, agg.fun, ...) {
+filter_stepwise <- function(cast.data,
+                            light.col,
+                            depth.col,
+                            id.cols = c("vessel", "cruise", "haul", "updown"),
+                            bin.size = 2,
+                            bin.gap = 6,
+                            agg.fun, ...) {
+
   names(cast.data)[which(names(cast.data) == light.col)] <- "trans_llight"
   names(cast.data)[which(names(cast.data) == depth.col)] <- "cdepth"
 
   max.depth <- max(ceiling(cast.data$cdepth), na.rm = T)
+
   # Bin by depth with bins centered
   cast.data$cdepth <- findInterval(cast.data$cdepth, seq(0, max.depth, bin.size), rightmost.closed = T, left.open = F, ...) * bin.size - bin.size/2
 
-  # # Convert light data
-  # cast.data$trans_llight <- convert_light(cast.data$llight)
-
   # Calculate binned light level using user-specified function
-  light_at_depth <- aggregate(trans_llight ~ vessel + cruise + haul + updown + cdepth, data = cast.data, FUN = eval(parse(text = paste(agg.fun))))
+  light_at_depth <- aggregate(formula = as.formula(paste("trans_llight", paste(c(id.cols, "cdepth"), collapse = "+"), sep = "~")),
+                              data = cast.data,
+                              FUN = agg.fun)
+
+
   light_at_depth <- light_at_depth[order(light_at_depth$cdepth),]
+
   # Stepwise measurement removal loop
   p2 <- 1
   while(p2 < nrow(light_at_depth) ) {
@@ -34,8 +44,8 @@ filter_stepwise <- function(cast.data, light.col, depth.col, bin.size = 2, bin.g
     }
     p2 <- p2 + 1
   }
-  # Assign data quality codes. -999 indicates gap of >=6 m and/or no measurements in upper 7m (0-1,1-3,3-5,5-7)
 
+  # Assign data continuity codes. -999 indicates gap >= bin.gap
   if(max(diff(light_at_depth$cdepth)) <= bin.gap & min(light_at_depth$cdepth + 1) <= bin.gap) {
     light_at_depth$quality <- 1
   } else {
