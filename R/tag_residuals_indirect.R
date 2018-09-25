@@ -32,8 +32,6 @@ tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs 
 
   x <- cbind(x, astrocalc4r(day = day(x$start_time), month = month(x$start_time), year = year(x$start_time), hour = hour(x$start_time) + minute(x$start_time)/60, timezone = rep(-8, nrow(x)), lat = x$start_latitude, lon = x$start_longitude, seaorland = "maritime"))
 
-  x$PAR <- x$PAR
-
   # GAM relating Frounin et al. (1989) model output to light in a depth bin.
   LIGHT_GAM <- gam(formula = formula, data = x, ...)
   x$light_residual <- residuals(LIGHT_GAM)
