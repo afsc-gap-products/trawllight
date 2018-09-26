@@ -20,27 +20,54 @@
 #' @references  Gary A. Nelson (2017). fishmethods: Fishery Science Methods and Models in R. R package version 1.10-4.https://CRAN.R-project.org/package=fishmethods
 #' @references Wood, S.N. (2011) Fast stable restricted maximum likelihood and marginal likelihood estimation of semiparametric generalized linear models. Journal of the Royal Statistical Society (B) 73(1):3-36
 
-tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs = "cr"), utc.offset = -8, lat.col = "start_latitude", lon.col = "start_longitude", time.col = "start_time", light.col = "trans_llight", ...) {
+tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs = "cr"),
+                                   utc.offset = -8,
+                                   lat.col = "start_latitude",
+                                   lon.col = "start_longitude",
+                                   time.col = "start_time",
+                                   light.col = "trans_llight",
+                                   depth.bins = c(1, 3, 5, 7, 9), ...) {
 
   # Change column names to match processing
   names(x)[names(x) == lat.col] <- "start_latitude"
   names(x)[names(x) == lon.col] <- "start_longitude"
   names(x)[names(x) == time.col] <- "start_time"
   names(x)[names(x) == light.col] <- "trans_llight"
+  lout <- list()
+
+  if(mean(c(depth.bins) %in% x$cdepth)) {
+    stop(paste0("tag_residuals_direct: Cannot calculate residuals. Some depth.bins not found in ", depth.col))
+  }
 
   x$hhour <- hour(x$start_time) + minute(x$start_time)/60
 
   x <- cbind(x, astrocalc4r(day = day(x$start_time), month = month(x$start_time), year = year(x$start_time), hour = hour(x$start_time) + minute(x$start_time)/60, timezone = rep(-8, nrow(x)), lat = x$start_latitude, lon = x$start_longitude, seaorland = "maritime"))
 
-  # GAM relating Frounin et al. (1989) model output to light in a depth bin.
-  LIGHT_GAM <- gam(formula = formula, data = x, ...)
-  x$light_residual <- residuals(LIGHT_GAM)
+  for(i in 1:length(depth.bins)) {
+    x_sub <- subset(x, cdepth == depth.bins[i])
+
+    # GAM relating Frounin et al. (1989) model output to light in a depth bin.
+    INDIRECT_GAM <- gam(formula = formula, data = x_sub, ...)
+
+    x_sub$light_residual <- residuals(LIGHT_GAM)
+
+    if(depth.bins[1] == depth.bins[i]) {
+      output.df <- x_sub
+    } else {
+      output.df <- plyr::rbind.fill(output.df, x_sub, ...)
+    }
+
+    lout[[i]] <- INDIRECT_GAM
+    names(lout)[i] <- paste0("gam_dbin", depth.bins[i])
+
+  }
 
   # Change column names to match input
-  names(x)[names(x) == "start_latitude"] <- lat.col
-  names(x)[names(x) == "start_longitude"] <-  lon.col
-  names(x)[names(x) == "start_time"] <-  time.col
-  names(x)[names(x) == "trans_llight"] <-  light.col
+  names(output.df)[names(output.df) == "start_latitude"] <- lat.col
+  names(output.df)[names(output.df) == "start_longitude"] <-  lon.col
+  names(output.df)[names(output.df) == "start_time"] <-  time.col
+  names(output.df)[names(output.df) == "trans_llight"] <-  light.col
 
-  return(x)
+  lout$resid_df <- output.df
+  return(lout)
 }
