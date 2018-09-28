@@ -22,34 +22,41 @@
 
 tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs = "cr"),
                                    utc.offset = -8,
-                                   lat.col = "start_latitude",
-                                   lon.col = "start_longitude",
+                                   lat.col = "latitude",
+                                   lon.col = "longitude",
                                    time.col = "start_time",
                                    light.col = "trans_llight",
                                    depth.bins = c(1, 3, 5, 7, 9), ...) {
 
   # Change column names to match processing
-  names(x)[names(x) == lat.col] <- "start_latitude"
-  names(x)[names(x) == lon.col] <- "start_longitude"
+  names(x)[names(x) == lat.col] <- "latitude"
+  names(x)[names(x) == lon.col] <- "longitude"
   names(x)[names(x) == time.col] <- "start_time"
   names(x)[names(x) == light.col] <- "trans_llight"
   lout <- list()
 
-  if(mean(c(depth.bins) %in% x$cdepth)) {
+  if(mean(c(depth.bins) %in% x$cdepth) < 1) {
     stop(paste0("tag_residuals_direct: Cannot calculate residuals. Some depth.bins not found in ", depth.col))
   }
 
-  x$hhour <- hour(x$start_time) + minute(x$start_time)/60
+  # x$hhour <- hour(x$start_time) + minute(x$start_time)/60
 
-  x <- cbind(x, astrocalc4r(day = day(x$start_time), month = month(x$start_time), year = year(x$start_time), hour = hour(x$start_time) + minute(x$start_time)/60, timezone = rep(-8, nrow(x)), lat = x$start_latitude, lon = x$start_longitude, seaorland = "maritime"))
+  x <- cbind(x, fishmethods::astrocalc4r(day = lubridate::day(x$start_time),
+                                         month = lubridate::month(x$start_time),
+                                         year = lubridate::year(x$start_time),
+                                         hour = lubridate::hour(x$start_time) + lubridate::minute(x$start_time)/60,
+                                         timezone = rep(-8, nrow(x)),
+                                         lat = x$latitude,
+                                         lon = x$longitude,
+                                         seaorland = "maritime"))
 
   for(i in 1:length(depth.bins)) {
     x_sub <- subset(x, cdepth == depth.bins[i])
 
     # GAM relating Frounin et al. (1989) model output to light in a depth bin.
-    INDIRECT_GAM <- gam(formula = formula, data = x_sub, ...)
+    INDIRECT_GAM <- mgcv::gam(formula = formula, data = x_sub, ...)
 
-    x_sub$light_residual <- residuals(LIGHT_GAM)
+    x_sub$indirect_residual <- residuals(INDIRECT_GAM)
 
     if(depth.bins[1] == depth.bins[i]) {
       output.df <- x_sub
@@ -63,8 +70,8 @@ tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs 
   }
 
   # Change column names to match input
-  names(output.df)[names(output.df) == "start_latitude"] <- lat.col
-  names(output.df)[names(output.df) == "start_longitude"] <-  lon.col
+  names(output.df)[names(output.df) == "latitude"] <- lat.col
+  names(output.df)[names(output.df) == "longitude"] <-  lon.col
   names(output.df)[names(output.df) == "start_time"] <-  time.col
   names(output.df)[names(output.df) == "trans_llight"] <-  light.col
 

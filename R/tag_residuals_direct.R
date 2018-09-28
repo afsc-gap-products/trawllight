@@ -18,7 +18,7 @@ tag_residuals_direct <- function(x, formula = log10(trans_llight) ~ log10(surf_t
   names(x)[names(x) == depth.col] <- "cdepth"
   lout <- list()
 
-  if(mean(c(depth.bins) %in% x$cdepth)) {
+  if(mean(c(depth.bins) %in% x$cdepth) < 1) {
     stop(paste0("tag_residuals_direct: Cannot calculate residuals. Some depth.bins not found in ", depth.col))
   }
 
