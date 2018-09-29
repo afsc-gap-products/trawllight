@@ -12,7 +12,12 @@
 #' @author S.K. Rohan \email{skrohan@@uw.edu}
 
 # Back-calculate light ratios to surface
-estimate_surface <- function(x, atten.col = "k_linear", ratio.col = "light_ratio", light.col = "trans_llight", depth.col = "cdepth", id.col = c("vessel", "cruise", "haul", "updown", "quality", "k_column")) {
+estimate_surface <- function(x,
+                             atten.col = "k_linear",
+                             ratio.col = "light_ratio",
+                             light.col = "trans_llight",
+                             depth.col = "cdepth",
+                             id.col = c("vessel", "cruise", "haul", "updown", "quality", "k_column")) {
   if(min(x$cdepth) != 1 & nrow(x) > 3) {
     names(x)[which(names(x) == ratio.col)] <- "light_ratio"
     names(x)[which(names(x) == atten.col)] <- "k_linear"
@@ -21,18 +26,25 @@ estimate_surface <- function(x, atten.col = "k_linear", ratio.col = "light_ratio
 
     do.not.duplicate <- c(id.col, "light_ratio", "k_linear", "cdepth")
 
-    x.light_ratio_adjust <- x[which(x$cdepth == min(x$cdepth)),]
-    x.light_ratio_adjust$k_linear <- mean(x$k_linear[which(rank(x$cdepth) == 2)], x$k_linear[which(rank(x$cdepth) == 3)])
+    x.adjust <- x[which(x$cdepth == min(x$cdepth)),]
+
+    # Mean linear attenuation coef. b/t the shallowest depth bin and second shallowest depth bin
+    x.adjust$k_linear <- mean(x$k_linear[which(rank(x$cdepth) == 2)], x$k_linear[which(rank(x$cdepth) == 3)])
+
+    # Depth for the shallowest available depth bin
     rank1_depth <- x$cdepth[which(rank(x$cdepth) == 1)]
 
+    # Determine how large the depth bin should be, calculate the depth where the middle of the reference depth bin should be.
     bin.adjust <- min(diff(x$cdepth))/2
 
     # Calculate light ratio relative to depth for the middle of the bin
-    x.light_ratio_adjust$light_ratio <- 1/exp(-1 * x.light_ratio_adjust$k_linear * (rank1_depth - bin.adjust))
-    x.light_ratio_adjust[,which(!(names(x.light_ratio_adjust) %in% do.not.duplicate))] <- NA
-    x.light_ratio_adjust$cdepth <- 1
-    x.light_ratio_adjust$trans_llight <- x$trans_llight[which(rank(x$cdepth) == 1)] * x.light_ratio_adjust$light_ratio
-    x <- rbind(x, x.light_ratio_adjust)
+    x.adjust$light_ratio <- 1/exp(-1 * x.adjust$k_linear * (rank1_depth - bin.adjust))
+    x.adjust[,which(!(names(x.adjust) %in% do.not.duplicate))] <- NA
+    x.adjust$cdepth <- 1
+    x.adjust$trans_llight <- x$trans_llight[which(rank(x$cdepth) == 1)] * x.adjust$light_ratio
+
+    # Put it back
+    x <- rbind(x, x.adjust)
     x$light_ratio <- x$light_ratio / max(x$light_ratio)
 
     names(x)[which(names(x) == "light_ratio")] <- ratio.col

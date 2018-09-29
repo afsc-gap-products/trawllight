@@ -33,13 +33,12 @@ tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs 
   names(x)[names(x) == lon.col] <- "longitude"
   names(x)[names(x) == time.col] <- "start_time"
   names(x)[names(x) == light.col] <- "trans_llight"
+
   lout <- list()
 
   if(mean(c(depth.bins) %in% x$cdepth) < 1) {
     stop(paste0("tag_residuals_direct: Cannot calculate residuals. Some depth.bins not found in ", depth.col))
   }
-
-  # x$hhour <- hour(x$start_time) + minute(x$start_time)/60
 
   x <- cbind(x, fishmethods::astrocalc4r(day = lubridate::day(x$start_time),
                                          month = lubridate::month(x$start_time),
@@ -61,7 +60,7 @@ tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs 
     if(depth.bins[1] == depth.bins[i]) {
       output.df <- x_sub
     } else {
-      output.df <- plyr::rbind.fill(output.df, x_sub, ...)
+      output.df <- plyr::rbind.fill(output.df, x_sub)
     }
 
     lout[[i]] <- INDIRECT_GAM
