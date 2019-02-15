@@ -1,6 +1,6 @@
-#' Estimate missing light measurements
+#' Estimate missing light measurement from reference depth bin
 #'
-#' Uses the linear attenuation coefficient of downwelling irradiance for the shallowest depth bins with 'good' quality light measurements to estimate light for the shallowest depth bin.
+#' Uses the linear attenuation coefficient of downwelling irradiance for the reference depth bin for cases with missing data.
 #'
 #' @param x Data frame containing depth, proportional light, binned light measurement, depth, and additional columns.
 #' @param atten.col Name of the column containing the linear attenuation coefficient. Default = "k_linear"
@@ -12,7 +12,7 @@
 #' @author S.K. Rohan \email{skrohan@@uw.edu}
 
 # Back-calculate light ratios to surface
-estimate_surface <- function(x,
+estimate_reference_light <- function(x,
                              atten.col = "k_linear",
                              ratio.col = "light_ratio",
                              light.col = "trans_llight",
@@ -52,6 +52,10 @@ estimate_surface <- function(x,
     names(x)[which(names(x) == "cdepth")] <- depth.col
     names(x)[which(names(x) == "trans_llight")] <- light.col
 
+    x$estimate_ref <- T
+
+  } else {
+    x$estimate_ref <- F
   }
   return(x)
 

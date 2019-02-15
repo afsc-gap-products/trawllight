@@ -1,10 +1,10 @@
 Package: trawllight
 Type: Package
 Title: Derive apparent optical properties from trawl-mounted archival tags
-Version: 0.5.0
+Version: 0.6.0
 Authors@R: person("Sean K.", "Rohan", email = "skrohan@uw.edu", role = c("aut", "cre"))
 Maintainer: Sean K. Rohan <skrohan@uw.edu>
-Description: Quality check and estimate apparent optical properties of the water column using light measurements from archival tags attached attached to trawl gear.
+Description: Quality control and estimation of apparent optical properties using light measurements obtained during bottom-trawl surveys using archival tags equipped with a photoelectric cell.
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
@@ -12,7 +12,9 @@ RoxygenNote: 6.0.1
 Imports: mgcv,
         plyr,
         fishmethods,
-        lubridate
+        lubridate,
+        kedd,
+        OSCV
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr

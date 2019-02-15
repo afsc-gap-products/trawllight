@@ -7,6 +7,7 @@
 #' @param loess.degree Degrees for loess model. Default = 1.
 #' @param kz.binsize Depth interval for estimating instantaneous diffuse attenuation coefficient of downwelling irradiance. Default = 0.2.
 #' @param min.range Minimum range of depths necessary for model fitting. Default = 10.
+#' @param light.predict Logical indicating whether predicted values for light should be returned.
 #' @param ... Additional arguments passed to loess fitting function
 #' @return Returns a list containing three data frames: \code{attenuation} contains depth and fitted attenuation values, \code{loess.fit} contains the model summary statistics, and \code{fit_residuals} contains model fit residuals.
 #'
@@ -22,7 +23,9 @@ calculate_attenuation <- function(x,
                                   loess.criterion = "aicc",
                                   loess.degree = 1,
                                   kz.binsize = 0.2,
-                                  min.range = 10, ...) {
+                                  min.range = 10,
+                                  light.predict = F,
+                                  ...) {
 
   names(x)[which(names(x) == light.col)] <- "trans_llight"
   names(x)[which(names(x) == depth.col)] <- "cdepth"
@@ -39,7 +42,7 @@ calculate_attenuation <- function(x,
 
     # Output data
     output <- data.frame(depth =  N_depths[1:(length(N_depths)-1)] + kz.binsize / 2,
-                         k_aicc = diff(light_fit) /kz.binsize)
+                         k_aicc = diff(light_fit)/kz.binsize)
 
     loess.fit <- data.frame(span_fit = profile_light_loess$pars$span,
                             nobs = profile_light_loess$n,
@@ -52,6 +55,11 @@ calculate_attenuation <- function(x,
     resids <- data.frame(residual = residuals(profile_light_loess),
                          log_trans_llight = log(x$trans_llight),
                          cdepth = x$cdepth)
+
+    if(light.predict) {
+      output$predict_light <- predict(profile_light_loess, newdata = output$depth)
+      resids$predict_light <- light_fit
+    }
 
     output_dfs <- list(fit_atten = loess.fit, attenuation = output, fit_residuals = resids)
     return(output_dfs)
