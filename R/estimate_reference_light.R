@@ -35,7 +35,7 @@ estimate_reference_light <- function(x,
     rank1_depth <- x$cdepth[which(rank(x$cdepth) == 1)]
 
     # Determine how large the depth bin should be, calculate the depth where the middle of the reference depth bin should be.
-    bin.adjust <- min(diff(x$cdepth))/2
+    bin.adjust <- min(diff(x$cdepth[order(x$cdepth)]))/2
 
     # Calculate light ratio relative to depth for the middle of the bin
     x.adjust$light_ratio <- 1/exp(-1 * x.adjust$k_linear * (rank1_depth - bin.adjust))
