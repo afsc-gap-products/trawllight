@@ -26,16 +26,25 @@ find_optical_depth <- function(x,
     stop("Invalid optical depth. Optical depth must be in the interval [0,Inf).")
   }
 
-  if(nrow(x) > 4) {
-    od_in <- x$optical_depth
-    x.loess <- loess.as2(x = od_in, y = log(x$cdepth), criterion = "aicc")
-    x$output<- exp(predict(x.loess, newdata = target.od))
+  if(nrow(x) > 2) {
+    # od_in <- x$optical_depth
+    # x.loess <- loess.as2(x = od_in, y = log(x$cdepth), criterion = "aicc")
+    # x$output<- exp(predict(x.loess, newdata = target.od))
+
+    x <- x[order(x$cdepth),]
+
+    if(any(x$optical_depth > target.od)) {
+      ind <- min(which(x$optical_depth > target.od))
+
+      aa <- (x$optical_depth[ind] - x$optical_depth[ind-1])/(x$cdepth[ind] - x$cdepth[ind-1])
+      bb <- x$optical_depth[ind] - x$cdepth[ind]*aa
+
+      zz <- (target.od-bb)/aa
+      x$output <- zz
+
   } else {
     warning("Insufficient data. Model fitting requires >4 observations.")
   }
-
-  if(x$output[1] > max(x$cdepth) || is.na(x$output[1])) {
-    warning("Estimated depth of water column depth greater than maximum depth bin. NA returned")
   }
 
   if(with.input == F) {

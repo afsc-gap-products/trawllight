@@ -29,7 +29,7 @@ estimate_reference_light <- function(x,
     x.adjust <- x[which(x$cdepth == min(x$cdepth)),]
 
     # Mean linear attenuation coef. b/t the shallowest depth bin and second shallowest depth bin
-    x.adjust$k_linear <- mean(x$k_linear[which(rank(x$cdepth) == 2)], x$k_linear[which(rank(x$cdepth) == 3)])
+    x.adjust$k_linear <- mean(c(x$k_linear[which(rank(x$cdepth) == 2)], x$k_linear[which(rank(x$cdepth) == 3)]))
 
     # Depth for the shallowest available depth bin
     rank1_depth <- x$cdepth[which(rank(x$cdepth) == 1)]
