@@ -47,6 +47,8 @@ estimate_reference_light <- function(x,
     x <- rbind(x, x.adjust)
     x$light_ratio <- x$light_ratio / max(x$light_ratio)
 
+    x[nrow(x), which(!(names(x) %in% c(id.col, "light_ratio", "k_linear", "cdepth", "trans_llight")))] <- x[1, which(!(names(x) %in% c(id.col, "light_ratio", "k_linear", "cdepth", "trans_llight")))]
+
     names(x)[which(names(x) == "light_ratio")] <- ratio.col
     names(x)[which(names(x) == "k_linear")] <- atten.col
     names(x)[which(names(x) == "cdepth")] <- depth.col
@@ -57,6 +59,8 @@ estimate_reference_light <- function(x,
   } else {
     x$estimate_ref <- F
   }
+
+
   return(x)
 
 }

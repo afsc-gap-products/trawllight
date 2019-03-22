@@ -26,10 +26,7 @@ find_optical_depth <- function(x,
     stop("Invalid optical depth. Optical depth must be in the interval [0,Inf).")
   }
 
-  if(nrow(x) > 2) {
-    # od_in <- x$optical_depth
-    # x.loess <- loess.as2(x = od_in, y = log(x$cdepth), criterion = "aicc")
-    # x$output<- exp(predict(x.loess, newdata = target.od))
+  if(nrow(x) > 1) {
 
     x <- x[order(x$cdepth),]
 
@@ -43,8 +40,12 @@ find_optical_depth <- function(x,
       x$output <- zz
 
   } else {
-    warning("Insufficient data. Model fitting requires >4 observations.")
+    warning("Target OD out of cast OD range.")
+    x$output <- NA
   }
+  } else {
+    warning("Insufficient data.")
+    x$output <- NA
   }
 
   if(with.input == F) {
