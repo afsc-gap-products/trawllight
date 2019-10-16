@@ -33,12 +33,22 @@ calculate_attenuation <- function(x,
   # Remove profiles with only a small portion of the water column sampled
 
   if((max(x$cdepth) - min(x$cdepth)) > min.range) { # Do not fit if depth range is < min.range
-    if(length(unique(x$cdepth)) > 3) { # Cannot fit loess to fewer than three data points
+    if(length(unique(x$cdepth)) > 4) { # Cannot fit loess to fewer than three data points
 
     # Fit loess model
     N_depths <- seq(min(min(x$cdepth)), max(x$cdepth), kz.binsize)
     profile_light_loess <- loess.as2(x = x$cdepth, y = log(x$trans_llight), criterion = loess.criterion, degree = loess.degree, ...)
+
+    # Adjust for overfitting caused by omitted data
+    k <- 3
+    while(profile_light_loess$s == Inf) {
+      profile_light_loess <- loess.as2(x = x$cdepth, y = log(x$trans_llight), criterion = loess.criterion,
+                                       degree = loess.degree,
+                                       min.bins = k+1)
+    }
+
     light_fit <- predict(profile_light_loess, newdata = N_depths)
+
 
     # Output data
     output <- data.frame(depth =  N_depths[1:(length(N_depths)-1)] + kz.binsize / 2,
