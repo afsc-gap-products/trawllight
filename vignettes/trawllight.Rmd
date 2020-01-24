@@ -10,3 +10,6 @@ vignette: >
 ---
 
 # Coming soon (SR Jan 24, 2020)
+
+## Algorithm design
+![Flow chart of algorithm subroutines used to apply quality control checks to data products and derive apparent optical properties. Italicized names indicate the names of functions implemented in the R package trawllight which are used to process light data.](images/processing_diagram.png)
