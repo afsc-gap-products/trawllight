@@ -1,7 +1,8 @@
 inst/doc
 *.Rproj
 *.RData
-.Rproj.user
+*.Rproj.user
 NAMESPACE
-.Rhistory
+*.Rhistory
+*.gitignore
 .Rbuildignore
