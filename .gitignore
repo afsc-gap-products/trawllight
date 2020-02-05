@@ -4,5 +4,5 @@ inst/doc
 *.Rproj.user
 NAMESPACE
 *.Rhistory
-*.gitignore
+.gitignore
 .Rbuildignore
