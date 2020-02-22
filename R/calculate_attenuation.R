@@ -1,6 +1,6 @@
-#' Instantaneous diffuse attenuation coefficient of downwelling irradiance
+#'  Diffuse attenuation coefficient of downwelling irradiance
 #'
-#' \code{calculate_attenuation} fits a loess model between depth and light using an AICc-based span selection model adapated from \code{fANCOVA::loess.as}, then estimates the first derivative of the resultant model slope to approximate the instantaneous diffuse attenuation coefficient of downwelling irradiance.
+#' \code{calculate_attenuation} fits a loess model between depth and light using an AICc-based span selection model adapated from \code{fANCOVA::loess.as}, then estimates the first derivative of the resultant model slope to approximate the diffuse attenuation coefficient of downwelling irradiance (vertical attenuation coefficient).
 #'
 #' @param x Data frame containing depth and light for a single cast.
 #' @param loess.criterion Criterion for choosing the most parsimonious model. Options are bias-corrected Akaike's Information Criterion ("aicc") or generalized cross-validation ("gcv").
@@ -9,7 +9,7 @@
 #' @param min.range Minimum range of depths necessary for model fitting. Default = 10.
 #' @param light.predict Logical indicating whether predicted values for light should be returned.
 #' @param ... Additional arguments passed to loess fitting function
-#' @return Returns a list containing three data frames: \code{attenuation} contains depth and fitted attenuation values, \code{loess.fit} contains the model summary statistics, and \code{fit_residuals} contains model fit residuals.
+#' @return Returns a list containing three data frames: \code{attenuation} contains depth and fitted values of vertical diffuse attenuation coefficient, \code{loess.fit} contains the model summary statistics, and \code{fit_residuals} contains model fit residuals.
 #'
 #' @author S.K. Rohan \email{skrohan@@uw.edu}
 #'
