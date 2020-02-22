@@ -52,7 +52,7 @@ calculate_attenuation <- function(x,
 
     # Output data
     output <- data.frame(depth =  N_depths[1:(length(N_depths)-1)] + kz.binsize / 2,
-                         k_aicc = -1*diff(light_fit)/kz.binsize)
+                         kdz = -1*diff(light_fit)/kz.binsize)
 
     loess.fit <- data.frame(span_fit = profile_light_loess$pars$span,
                             nobs = profile_light_loess$n,
