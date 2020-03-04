@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3688864.svg)](https://doi.org/10.5281/zenodo.3688864)
+
 # trawllight
 The trawllight R package contains functions to implement an algorithm that derives apparent optical properties from light measurements collected during NOAA bottom-trawl surveys. A description of the light data collection protocol, algorithm subroutines, and algorithm performance is presented in Rohan et al. (in prep). Algorithm subroutines are contained in individual functions in the trawllight package.
 
