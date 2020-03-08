@@ -6,3 +6,4 @@ NAMESPACE
 *.Rhistory
 .gitignore
 .Rbuildignore
+.Rproj.user

@@ -1,13 +1,21 @@
 #' Convert archival tag light to PFD
 #'
-#' \code{convert_light} converts light measurements from relative units recorded by a Wildlife Computers TDR-Mk9 archival tag to photon flux density, based on the equation of Kotwicki et al. (2009).
+#' \code{convert_light} converts light measurements from relative units recorded by a Wildlife Computers TDR-Mk9 archival tag equipped with a Hamatsu S2387 silicone photodiode to quantum units based on the equation of Kotwicki et al. (2009), or blue light intensity reported by Wildlife Computers.
 #'
-#' @param x Archival tag light measurement in relative units (0-256)
+#' @param x Archival tag light measurement in relative units (~25-225)
+#' @param method Character vector indicating what method to use for conversion. Either "kotwicki" or "wc"
 #' @return Light in units of photon flux density.
 #'
 #' @references Kotwicki, S., Robertis, A., von Szalay, P., and Towler, R. 2009. The effect of light intensity on the availability of walleye pollock (Theragra chalcogramma) to bottom trawl and acoustic surveys. Can. J. Fish. Aquat. Sci. 66(6): 983–994. doi:10.1139/f09-055.
 
-convert_light <- function(x) {
-  y <- 1*10^-8 * exp(0.1322*x)
+convert_light <- function(x, method = "kotwicki") {
+  method <- tolower(method)
+  if(method == "kotwicki") {
+    y <- 1*10^-8 * exp(0.1322*x)
+  } else if(method == "wc") {
+    y <- 10^((x - 250)/20)
+  } else {
+    stop("Invalid method. Valid choices: kotwicki, wc")
+  }
   return(y)
 }
