@@ -24,7 +24,7 @@ filter_stepwise <- function(cast.data,
   max.depth <- max(ceiling(cast.data$cdepth), na.rm = T)
 
   # Bin by depth with bins centered
-  cast.data$cdepth <- findInterval(cast.data$cdepth, seq(0, max.depth, bin.size), rightmost.closed = T, left.open = F, ...) * bin.size - bin.size/2
+  cast.data$cdepth <- findInterval(x = cast.data$cdepth, vec = seq(0, max.depth, bin.size), rightmost.closed = T, left.open = F) * bin.size - bin.size/2
 
   # Calculate binned light level using user-specified function
   light_at_depth <- aggregate(formula = as.formula(paste("trans_llight", paste(c(id.cols, "cdepth"), collapse = "+"), sep = "~")),
