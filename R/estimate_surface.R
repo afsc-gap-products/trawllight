@@ -12,7 +12,7 @@
 #' @author S.K. Rohan \email{skrohan@@uw.edu}
 
 # Back-calculate light ratios to surface
-estimate_reference_light <- function(x,
+estimate_surface <- function(x,
                              atten.col = "k_linear",
                              ratio.col = "light_ratio",
                              light.col = "trans_llight",
