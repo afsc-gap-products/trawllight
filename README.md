@@ -3,7 +3,11 @@
 # trawllight
 The trawllight R package contains functions to implement an algorithm that derives apparent optical properties from light measurements collected during NOAA bottom-trawl surveys. A description of the light data collection protocol, algorithm subroutines, and algorithm performance is presented in Rohan et al. (in prep). Algorithm subroutines are contained in individual functions in the trawllight package.
 
-The most recent version of the trawllight package was built in R 3.6.2.
+The most recent version of the trawllight package was built in R 4.0.2.
+
+### Legal disclaimer
+
+This repository is a software product and is not official communication of the National Oceanic and Atmospheric Administration (NOAA), or the United States Department of Commerce (DOC). All NOAA GitHub project code is provided on an 'as is' basis and the user assumes responsibility for its use. Any claims against the DOC or DOC bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation, or favoring by the DOC. The DOC seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by the DOC or the United States Government.
 
 
 # Installation
@@ -20,4 +24,4 @@ install_github("sean-rohan/trawllight")
 A vignette demonstrating how to use the trawllight package is in development (SR Jan 24, 2020).
 
 # References
-Rohan, S., Kotwicki, S., Laman, E., Britt, L., Aydin, K. In review. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags.
+S. K. Rohan, S. Kotwicki, L. L. Britt, E. A. Laman, and K. Aydin. 2020. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags. U.S. Dep. Commer., NOAA Tech. Memo. NMFS-AFSC-403, 91 p. [https://doi.org/10.25923/42yn-1q79](https://doi.org/10.25923/42yn-1q79)
