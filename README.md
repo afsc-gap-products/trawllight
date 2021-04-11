@@ -19,10 +19,6 @@ require(devtools)
 install_github("sean-rohan/trawllight")
 ```
 
-# Vignette
-
-A vignette demonstrating how to use the trawllight package is in development (SR Jan 24, 2020).
-
 # References
 Rohan, S.K, Kotwicki, S., Britt, L.L., Laman, E.A., and Aydin, K. 2020. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags. U.S. Dep. Commer., NOAA Tech. Memo. NMFS-AFSC-403, 91 p. [https://doi.org/10.25923/42yn-1q79](https://doi.org/10.25923/42yn-1q79)
 
