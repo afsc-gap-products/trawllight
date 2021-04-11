@@ -24,4 +24,6 @@ install_github("sean-rohan/trawllight")
 A vignette demonstrating how to use the trawllight package is in development (SR Jan 24, 2020).
 
 # References
-S. K. Rohan, S. Kotwicki, L. L. Britt, E. A. Laman, and K. Aydin. 2020. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags. U.S. Dep. Commer., NOAA Tech. Memo. NMFS-AFSC-403, 91 p. [https://doi.org/10.25923/42yn-1q79](https://doi.org/10.25923/42yn-1q79)
+Rohan, S.K, Kotwicki, S., Britt, L.L., Laman, E.A., and Aydin, K. 2020. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags. U.S. Dep. Commer., NOAA Tech. Memo. NMFS-AFSC-403, 91 p. [https://doi.org/10.25923/42yn-1q79](https://doi.org/10.25923/42yn-1q79)
+
+Rohan, S.K., Kotwicki, S., Kearney, K.A., Schulien, J.A., Laman, E.A., Cokelet, E.D., Beauchamp, D.A., Britt, L.L., Aydin, K.Y., Zador, S.G., In press. Using bottom trawls to monitor subsurface water clarity in marine ecosystems. Prog. Oceanogr. 102554. https://doi.org/10.1016/j.pocean.2021.102554
