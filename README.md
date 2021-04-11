@@ -3,7 +3,7 @@
 # trawllight
 The trawllight R package contains functions to implement an algorithm that derives apparent optical properties from light measurements collected during NOAA bottom-trawl surveys. A description of the light data collection protocol, algorithm subroutines, and algorithm performance is presented in Rohan et al. (in prep). Algorithm subroutines are contained in individual functions in the trawllight package.
 
-The most recent version of the trawllight package was built in R 4.0.2.
+The most recent version of the trawllight package was built in R 4.0.4.
 
 ### Legal disclaimer
 
@@ -22,4 +22,4 @@ install_github("sean-rohan/trawllight")
 # References
 Rohan, S.K, Kotwicki, S., Britt, L.L., Laman, E.A., and Aydin, K. 2020. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags. U.S. Dep. Commer., NOAA Tech. Memo. NMFS-AFSC-403, 91 p. [https://doi.org/10.25923/42yn-1q79](https://doi.org/10.25923/42yn-1q79)
 
-Rohan, S.K., Kotwicki, S., Kearney, K.A., Schulien, J.A., Laman, E.A., Cokelet, E.D., Beauchamp, D.A., Britt, L.L., Aydin, K.Y., Zador, S.G., In press. Using bottom trawls to monitor subsurface water clarity in marine ecosystems. Prog. Oceanogr. 102554. https://doi.org/10.1016/j.pocean.2021.102554
+Rohan, S.K., Kotwicki, S., Kearney, K.A., Schulien, J.A., Laman, E.A., Cokelet, E.D., Beauchamp, D.A., Britt, L.L., Aydin, K.Y., Zador, S.G., In press. Using bottom trawls to monitor subsurface water clarity in marine ecosystems. Prog. Oceanogr. 102554. [https://doi.org/10.1016/j.pocean.2021.102554](https://doi.org/10.1016/j.pocean.2021.102554)
