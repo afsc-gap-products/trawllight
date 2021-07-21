@@ -2,7 +2,7 @@
 % Please edit documentation in R/spctral2.R
 \name{spctral2}
 \alias{spctral2}
-\title{Bird and Riordan Solar Irradiance Model}
+\title{SPCTRAL2 Solar Irradiance Model}
 \usage{
 spctral2(
   latitude,
@@ -80,7 +80,7 @@ spctral2(
 A data frame containing spectral direct and diffuse irradiance by wavelength in units of photon flux density (photons per square meter per second)
 }
 \description{
-An entirely R-based implementation of the Bird and Riordan (1984, 1986) SPCTRAL2 model to estimate direct and diffuse spectral irradiance on horizontal and titled surfaces at the Earth's surface. Model based on the FORTRAN program SPCTRAL2 (Bird and Riordan, 1984) with corrections described by Bird and Riordan (1986). As of July 2021, FORTRAN and C implementations of SPCTRAL2 are available from the National Renewable Energy Laboratory: [https://www.nrel.gov/grid/solar-resource/spectral.html](https://www.nrel.gov/grid/solar-resource/spectral.html)
+A fully R-based implementation of the Bird and Riordan (1984, 1986) SPCTRAL2 model. Estimates direct and diffuse spectral irradiance on horizontal and titled surfaces at the Earth's surface. This R implementation is based on code for the FORTRAN program SPCTRLA2, including corrections to code and equations described by Bird and Riordan (1986). As of July 2021, FORTRAN and C implementations of SPCTRAL2 using the original Bird and Riordan (1984, 1986) formulation is available from the National Renewable Energy Laboratory: [https://www.nrel.gov/grid/solar-resource/spectral.html](https://www.nrel.gov/grid/solar-resource/spectral.html).
 }
 \references{
 Bird, R., Riordan, C. 1984. Simple solar spectral model for direct and diffuse irradiance on horizontal and titled planes at the Earth's surface for cloudless atmospheres. SERI/TR-2145-2436. Solar Energy Research Institute. 37 pp.
