@@ -4,10 +4,17 @@
 \alias{tag_residuals_indirect}
 \title{Indirect method for detecting tag obstruction}
 \usage{
-tag_residuals_indirect(x, formula = log10(trans_llight) ~ s(PAR, bs = "cr"),
-  utc.offset = -8, lat.col = "start_latitude",
-  lon.col = "start_longitude", time.col = "start_time",
-  light.col = "trans_llight", ...)
+tag_residuals_indirect(
+  x,
+  formula = log10(trans_llight) ~ s(PAR, bs = "cr"),
+  utc.offset = -8,
+  lat.col = "latitude",
+  lon.col = "longitude",
+  time.col = "start_time",
+  light.col = "trans_llight",
+  depth.bins = c(1, 3, 5, 7, 9),
+  ...
+)
 }
 \arguments{
 \item{x}{Data frame containing light at depth, depth, latitude (decimal degrees), longitude (decimal degrees), cast start time in POSIXct format, and timezone offset relative to UTC and unique identifiers for survey vessels, years, etc.}

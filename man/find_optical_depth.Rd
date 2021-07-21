@@ -4,8 +4,14 @@
 \alias{find_optical_depth}
 \title{Depth of optical depth}
 \usage{
-find_optical_depth(x, od.col = "optical_depth", depth.col = "cdepth",
-  target.od = 2.302585, with.input = F, return.col = F)
+find_optical_depth(
+  x,
+  od.col = "optical_depth",
+  depth.col = "cdepth",
+  target.od = 2.302585,
+  with.input = F,
+  return.col = F
+)
 }
 \arguments{
 \item{x}{Data frame containing optical depth and bin depth for a single cast.}

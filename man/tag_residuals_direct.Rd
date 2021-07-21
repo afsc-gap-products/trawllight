@@ -4,10 +4,16 @@
 \alias{tag_residuals_direct}
 \title{Direct method for detecting tag obstruction}
 \usage{
-tag_residuals_direct(x, formula = log10(trans_llight) ~
-  log10(surf_trans_llight) + interaction(vessel, cruise),
-  water.col = "trans_llight", surface.col = "surf_trans_llight",
-  depth.col = "cdepth", depth.bins = c(1, 3, 5, 7, 9), ...)
+tag_residuals_direct(
+  x,
+  formula = log10(trans_llight) ~ log10(surf_trans_llight) + interaction(vessel,
+    cruise),
+  water.col = "trans_llight",
+  surface.col = "surf_trans_llight",
+  depth.col = "cdepth",
+  depth.bins = c(1, 3, 5, 7, 9),
+  ...
+)
 }
 \arguments{
 \item{x}{Data frame containing surface light, light at depth, depth, and unique identifiers for survey vessels, years, etc.}
@@ -21,6 +27,8 @@ tag_residuals_direct(x, formula = log10(trans_llight) ~
 \item{depth.col}{A character vector with the name of the column containing depths.}
 
 \item{depth.bins}{Depth bins for which linear regression should be conducted.}
+
+\item{...}{Additional arguments}
 }
 \description{
 \code{tag_residuals_direct} uses a linear model to estimate the relationship between surface light and light below the surface for the specified depth bins.

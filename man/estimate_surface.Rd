@@ -2,11 +2,16 @@
 % Please edit documentation in R/estimate_surface.R
 \name{estimate_surface}
 \alias{estimate_surface}
-\title{Estimate missing light measurements}
+\title{Estimate missing light measurement from reference depth bin}
 \usage{
-estimate_surface(x, atten.col = "k_linear", ratio.col = "light_ratio",
-  light.col = "trans_llight", depth.col = "cdepth", id.col = c("vessel",
-  "cruise", "haul", "updown", "quality", "k_column"))
+estimate_surface(
+  x,
+  atten.col = "k_linear",
+  ratio.col = "light_ratio",
+  light.col = "trans_llight",
+  depth.col = "cdepth",
+  id.col = c("vessel", "cruise", "haul", "updown", "quality", "k_column")
+)
 }
 \arguments{
 \item{x}{Data frame containing depth, proportional light, binned light measurement, depth, and additional columns.}
@@ -22,7 +27,7 @@ estimate_surface(x, atten.col = "k_linear", ratio.col = "light_ratio",
 \item{id.col}{Vector of column names which uniquely identify data for a single cast.}
 }
 \description{
-Uses the linear attenuation coefficient of downwelling irradiance for the shallowest depth bins with 'good' quality light measurements to estimate light for the shallowest depth bin.
+Uses the linear attenuation coefficient of downwelling irradiance for the reference depth bin for cases with missing data.
 }
 \author{
 S.K. Rohan \email{skrohan@uw.edu}

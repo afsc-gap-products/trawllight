@@ -2,11 +2,19 @@
 % Please edit documentation in R/calculate_attenuation.R
 \name{calculate_attenuation}
 \alias{calculate_attenuation}
-\title{Instantaneous diffuse attenuation coefficient of downwelling irradiance}
+\title{Diffuse attenuation coefficient of downwelling irradiance}
 \usage{
-calculate_attenuation(x, light.col = "trans_llight", depth.col = "cdepth",
-  loess.criterion = "aicc", loess.degree = 1, kz.binsize = 0.2,
-  min.range = 10, ...)
+calculate_attenuation(
+  x,
+  light.col = "trans_llight",
+  depth.col = "cdepth",
+  loess.criterion = "aicc",
+  loess.degree = 1,
+  kz.binsize = 0.2,
+  min.range = 10,
+  light.predict = F,
+  ...
+)
 }
 \arguments{
 \item{x}{Data frame containing depth and light for a single cast.}
@@ -19,13 +27,15 @@ calculate_attenuation(x, light.col = "trans_llight", depth.col = "cdepth",
 
 \item{min.range}{Minimum range of depths necessary for model fitting. Default = 10.}
 
+\item{light.predict}{Logical indicating whether predicted values for light should be returned.}
+
 \item{...}{Additional arguments passed to loess fitting function}
 }
 \value{
-Returns a list containing three data frames: \code{attenuation} contains depth and fitted attenuation values, \code{loess.fit} contains the model summary statistics, and \code{fit_residuals} contains model fit residuals.
+Returns a list containing three data frames: \code{attenuation} contains depth and fitted values of vertical diffuse attenuation coefficient, \code{loess.fit} contains the model summary statistics, and \code{fit_residuals} contains model fit residuals.
 }
 \description{
-\code{calculate_attenuation} fits a loess model between depth and light using an AICc-based span selection model adapated from \code{fANCOVA::loess.as}, then estimates the first derivative of the resultant model slope to approximate the instantaneous diffuse attenuation coefficient of downwelling irradiance.
+\code{calculate_attenuation} fits a loess model between depth and light using an AICc-based span selection model adapated from \code{fANCOVA::loess.as}, then estimates the first derivative of the resultant model slope to approximate the diffuse attenuation coefficient of downwelling irradiance (vertical attenuation coefficient).
 }
 \references{
 Hurvich, C.M., Simonoff, J.S., and Tsai, C.-L. 1998. Smoothing parameter selection in nonparametric regression using an improved Akaike information criterion. J. R. Stat. Soc. B 60(2): 271-293.

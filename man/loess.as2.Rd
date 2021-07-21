@@ -4,9 +4,17 @@
 \alias{loess.as2}
 \title{Local polynomial regression with automatic span selection and user-defined span bounds}
 \usage{
-loess.as2(x, y, degree = 1, criterion = c("aicc", "gcv"),
-  family = c("gaussian", "symmetric"), min.bins = 3, user.span = NULL,
-  plot = FALSE, ...)
+loess.as2(
+  x,
+  y,
+  degree = 1,
+  criterion = c("aicc", "gcv"),
+  family = c("gaussian", "symmetric"),
+  min.bins = 3,
+  user.span = NULL,
+  plot = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{as described for \code{fANCOVA::loess.as}}
