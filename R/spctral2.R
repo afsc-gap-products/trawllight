@@ -22,7 +22,7 @@
 #' @param omega_p Single scattering wavelength variation factor. Default = 0.095
 #' @param cloud_modification Logical. Should the cloud cover modification from Bird et al. (1987) be used. Default = TRUE.
 #' 
-#' @return A data frame containing spectral direct and diffuse irradiance by wavelength in units of photon flux density (photons per square meter per second)
+#' @return A data frame containing spectral direct and diffuse irradiance by wavelength at the earth's surface.
 #' 
 #' @references Bird, R., Riordan, C. 1984. Simple solar spectral model for direct and diffuse irradiance on horizontal and titled planes at the Earth's surface for cloudless atmospheres. SERI/TR-2145-2436. Solar Energy Research Institute. 37 pp.
 #' @references Bird, R.E., Riordan, C., 1986. Simple solar spectral model for direct and diffuse irradiance on horizontal and tilted planes at the Earth’s surface for cloudless atmospheres. J. Clim. Appl. Meteorol. 25, 87–97. https://doi.org/10.1175/1520-0450(1986)025<0087:SSSMFD>2.0.CO;2

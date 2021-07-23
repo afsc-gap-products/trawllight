@@ -14,8 +14,8 @@ radtran(
   alpha,
   surface_pressure,
   water_vapor,
-  aerosol_scale_height = 1,
-  visual_range = 8,
+  aerosol_scale_height = NA,
+  visual_range = NA,
   air_mass,
   relative_humidity,
   wind_speed = 0,
@@ -45,9 +45,9 @@ radtran(
 
 \item{water_vapor}{precipitable water vapor (cm)}
 
-\item{aerosol_scale_height}{Aerosol scale height in kilometers. Default = 1 km (Gordon and Castano 1987)}
+\item{aerosol_scale_height}{Aerosol scale height in kilometers. Only used if cloud_modification = FALSE.}
 
-\item{visual_range}{Visibility in kilometers. Default = 8.}
+\item{visual_range}{Visibility in kilometers. Only used if cloud_modification = FALSE.}
 
 \item{air_mass}{Air mass type (1-10). Typically 1-10, where 1 correspondswith marine aerosols, 10 with continental aerosols.}
 
@@ -70,7 +70,7 @@ radtran(
 \item{ozone}{Either a 1L numeric vector indicating the total ozone value or a character vector indicating an algorithmic approximation method. The only approximation method currently available is "vanheuklon" based on Van Heuklon (1979).}
 }
 \value{
-A data frame containing spectral direct and diffuse irradiance by wavelength in units of photon flux density (photons per square meter per second)
+A data frame containing spectral direct and diffuse irradiance by wavelength at the sea surface and just below the sea surface.
 }
 \description{
 An R-based implementation of the Gregg and Carder (1990) model for cloudless maritime atmospheres, along with an option to use the delta-Eddington approximation of two-stream approach for spectral cloud transmission following Slingo (1989). Produces estimates of direct and diffuse spectral irradiance at the sea surface and just below the sea surface at 1 nm resolution for 350-700 nm wavelengths. Atmospheric path length calculation follows Kasten and Young (1989) instead of Kasten (1965), as suggested by Gregg (2002). Ozone scale height calculation

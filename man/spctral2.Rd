@@ -66,7 +66,7 @@ spctral2(
 \item{cloud_modification}{Logical. Should the cloud cover modification from Bird et al. (1987) be used. Default = TRUE.}
 }
 \value{
-A data frame containing spectral direct and diffuse irradiance by wavelength in units of photon flux density (photons per square meter per second)
+A data frame containing spectral direct and diffuse irradiance by wavelength at the earth's surface.
 }
 \description{
 An R-based implementation of the Bird and Riordan (1984, 1986) SPCTRAL2 model. Produces estimates direct and diffuse spectral irradiance on horizontal and titled surfaces at the Earth's surface for 300-4000 nm wavelengths. This R implementation is based on code for the FORTRAN program SPCTRLA2, including corrections to code and equations described by Bird and Riordan (1986). As of July 2021, FORTRAN and C implementations of SPCTRAL2 using the original Bird and Riordan (1984, 1986) formulation is available from the National Renewable Energy Laboratory: [https://www.nrel.gov/grid/solar-resource/spectral.html](https://www.nrel.gov/grid/solar-resource/spectral.html).

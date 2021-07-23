@@ -11,8 +11,8 @@
 #' @param alpha Power on angstrom turbidity expression 
 #' @param surface_pressure Surface pressure (milibars)
 #' @param water_vapor precipitable water vapor (cm)
-#' @param aerosol_scale_height Aerosol scale height in kilometers. Default = 1 km (Gordon and Castano 1987)
-#' @param visual_range Visibility in kilometers. Default = 8.
+#' @param aerosol_scale_height Aerosol scale height in kilometers. Only used if cloud_modification = FALSE.
+#' @param visual_range Visibility in kilometers. Only used if cloud_modification = FALSE.
 #' @param air_mass Air mass type (1-10). Typically 1-10, where 1 correspondswith marine aerosols, 10 with continental aerosols. 
 #' @param relative_humidity Relative humidity (percent).
 #' @param wind_speed Wind speed in meters per second. Must be greater than or equal to zero. Default = 0 (calm)
@@ -24,7 +24,7 @@
 #' @param cloud_droplet_radius Cloud droplet radius in micrometers. Used for cloud_modification. Default 11.8 micrometers = mean oceanic value from Han et al. (1994).
 #' @param liquid_water_path Liquid water path used for cloud_modification.
 #' 
-#' @return A data frame containing spectral direct and diffuse irradiance by wavelength in units of photon flux density (photons per square meter per second)
+#' @return A data frame containing spectral direct and diffuse irradiance by wavelength at the sea surface and just below the sea surface.
 #' 
 #' @references Gregg, W.W., 2002. A coupled ocean-atmosphere radiative model for global ocean biogeochemical models. NASA Global Modeling and Assimilation Series, M. Suarez (ed.), NASA Technical Memorandum 2002-104606, Volume 22.
 #' @references Gregg, W.W., Carder, K.L., 1990. A simple spectral solar irradiance model for cloudless maritime atmospheres. Limnol. Oceanogr. 35, 1657–1675. https://doi.org/10.4319/lo.1990.35.8.1657
@@ -33,7 +33,7 @@
 #' @references Slingo, A., 1989. A GCM parameterization for the shortwave radiative properties of water clouds. J. Atmos. Sci. 46, 1419–1427. https://doi.org/10.1175/1520-0469(1989)046<1419:AGPFTS>2.0.CO;2
 #' @references Van Heuklon, T.K., 1979. Estimating atmospheric ozone for solar radiation models. Sol. Energy 22, 63–68. https://doi.org/10.1016/0038-092X(79)90060-4
 
-radtran <- function(latitude, longitude, doy, hour, minute, tz, alpha, surface_pressure, water_vapor, aerosol_scale_height = 1, visual_range = 8, air_mass, relative_humidity, wind_speed = 0, cloud_modification = TRUE, water_refraction = 1.341, foam_spectrum = FALSE, cloud_droplet_radius = 11.8, liquid_water_path = 125) {
+radtran <- function(latitude, longitude, doy, hour, minute, tz, alpha, surface_pressure, water_vapor, aerosol_scale_height = NA, visual_range = NA, air_mass, relative_humidity, wind_speed = 0, cloud_modification = TRUE, water_refraction = 1.341, foam_spectrum = FALSE, cloud_droplet_radius = 11.8, liquid_water_path = 125) {
   
   # Numbers in parentheses correspond with equations in Gregg and Carder (1990) 
   
