@@ -1,9 +1,9 @@
 Package: trawllight
 Type: Package
 Title: Derive apparent optical properties from trawl-mounted light sensors
-Version: 1.4.0
-Authors@R: person("Sean K.", "Rohan", email = "skrohan@uw.edu", role = c("aut", "cre"))
-Maintainer: Sean K. Rohan <skrohan@uw.edu>
+Version: 2.0.0
+Authors@R: person("Sean ", "Rohan", email = "sean.rohan@noaa.gov", role = c("aut", "cre"))
+Maintainer: Sean K. Rohan <sean.rohan@noaa.gov>
 Description: Quality control and derive pparent optical properties from irradiance measurements obtained during bottom-trawl surveys using archival tags equipped with a photoelectric cell.
 License: GPL (>=2)
 Encoding: UTF-8
