@@ -13,20 +13,17 @@ spctral2(
   tz,
   alpha,
   angle_of_incidence,
-  n_wavelengths,
-  ozone,
+  ozone = NA,
   albedo,
   surface_tilt,
   surface_azimuth = 180,
   surface_pressure,
   aod,
   water_vapor,
-  w_v,
-  r_v,
-  z,
-  asym,
-  omega,
-  omega_p
+  asym = 0.65,
+  omega = 0.945,
+  omega_p = 0.095,
+  cloud_modification = FALSE
 )
 }
 \arguments{
@@ -46,8 +43,6 @@ spctral2(
 
 \item{angle_of_incidence}{Angle of incidence of direct beam on flat surface (in degrees)}
 
-\item{n_wavelengths}{Number of wavelengths}
-
 \item{ozone}{Ozone (O_3) in atmospheres per centimeter}
 
 \item{albedo}{Ground albedo. Default is a generic value of 0.06 for sea surface}
@@ -62,25 +57,19 @@ spctral2(
 
 \item{water_vapor}{precipitable water vapor (cm)}
 
-\item{w_v}{Vector of wavelengths (length the same as length of r_v)}
-
-\item{r_v}{Vector of reflectivity at wavelengths (length the same as length of w_v)}
-
 \item{asym}{Aerosol scattering asymmetry factor (forward to total scattering ratio)}
 
-\item{omega}{Single scattering albedo factor}
+\item{omega}{Single scattering albedo at 400 nm. Default = 0.945}
 
-\item{omega_p}{Single scattering albedo factor}
+\item{omega_p}{Single scattering wavelength variation factor. Default = 0.095}
 
-\item{aoi}{}
-
-\item{zenith_degrees}{Solar zenith angle (degrees). If not provided, must provide latitude and longitude.}
+\item{cloud_modification}{Logical. Should the cloud cover modification from Bird et al. (1987) be used. Default = TRUE.}
 }
 \value{
 A data frame containing spectral direct and diffuse irradiance by wavelength in units of photon flux density (photons per square meter per second)
 }
 \description{
-A fully R-based implementation of the Bird and Riordan (1984, 1986) SPCTRAL2 model. Estimates direct and diffuse spectral irradiance on horizontal and titled surfaces at the Earth's surface. This R implementation is based on code for the FORTRAN program SPCTRLA2, including corrections to code and equations described by Bird and Riordan (1986). As of July 2021, FORTRAN and C implementations of SPCTRAL2 using the original Bird and Riordan (1984, 1986) formulation is available from the National Renewable Energy Laboratory: [https://www.nrel.gov/grid/solar-resource/spectral.html](https://www.nrel.gov/grid/solar-resource/spectral.html).
+An R-based implementation of the Bird and Riordan (1984, 1986) SPCTRAL2 model. Produces estimates direct and diffuse spectral irradiance on horizontal and titled surfaces at the Earth's surface for 300-4000 nm wavelengths. This R implementation is based on code for the FORTRAN program SPCTRLA2, including corrections to code and equations described by Bird and Riordan (1986). As of July 2021, FORTRAN and C implementations of SPCTRAL2 using the original Bird and Riordan (1984, 1986) formulation is available from the National Renewable Energy Laboratory: [https://www.nrel.gov/grid/solar-resource/spectral.html](https://www.nrel.gov/grid/solar-resource/spectral.html).
 }
 \references{
 Bird, R., Riordan, C. 1984. Simple solar spectral model for direct and diffuse irradiance on horizontal and titled planes at the Earth's surface for cloudless atmospheres. SERI/TR-2145-2436. Solar Energy Research Institute. 37 pp.

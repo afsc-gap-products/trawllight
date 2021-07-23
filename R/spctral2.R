@@ -1,6 +1,6 @@
 #' SPCTRAL2 Solar Irradiance Model
 #' 
-#' A fully R-based implementation of the Bird and Riordan (1984, 1986) SPCTRAL2 model. Estimates direct and diffuse spectral irradiance on horizontal and titled surfaces at the Earth's surface. This R implementation is based on code for the FORTRAN program SPCTRLA2, including corrections to code and equations described by Bird and Riordan (1986). As of July 2021, FORTRAN and C implementations of SPCTRAL2 using the original Bird and Riordan (1984, 1986) formulation is available from the National Renewable Energy Laboratory: [https://www.nrel.gov/grid/solar-resource/spectral.html](https://www.nrel.gov/grid/solar-resource/spectral.html).
+#' An R-based implementation of the Bird and Riordan (1984, 1986) SPCTRAL2 model. Produces estimates direct and diffuse spectral irradiance on horizontal and titled surfaces at the Earth's surface for 300-4000 nm wavelengths. This R implementation is based on code for the FORTRAN program SPCTRLA2, including corrections to code and equations described by Bird and Riordan (1986). As of July 2021, FORTRAN and C implementations of SPCTRAL2 using the original Bird and Riordan (1984, 1986) formulation is available from the National Renewable Energy Laboratory: [https://www.nrel.gov/grid/solar-resource/spectral.html](https://www.nrel.gov/grid/solar-resource/spectral.html).
 #' 
 #' @param latitude Latitude in decimal degrees (East is positive, West is negative)
 #' @param longitude Longitude in decimal degrees (North is positive, South is negative)
@@ -10,7 +10,6 @@
 #' @param tz Timezone
 #' @param alpha Power on angstrom turbidity expression (default = 1.14 for rural areas
 #' @param angle_of_incidence Angle of incidence of direct beam on flat surface (in degrees)
-#' @param n_wavelengths Number of wavelengths
 #' @param ozone Ozone (O_3) in atmospheres per centimeter
 #' @param albedo Ground albedo. Default is a generic value of 0.06 for sea surface
 #' @param surface_tilt Tilt angle of ground surface from horizontal (degrees)
@@ -18,20 +17,17 @@
 #' @param surface_pressure Surface pressure (milibars)
 #' @param aod aerosol optical depth at 0.5 microns (base e)
 #' @param water_vapor precipitable water vapor (cm)
-#' @param w_v Vector of wavelengths (length the same as length of r_v)
-#' @param r_v Vector of reflectivity at wavelengths (length the same as length of w_v)
 #' @param asym Aerosol scattering asymmetry factor (forward to total scattering ratio)
-#' @param aoi 
-#' @param zenith_degrees Solar zenith angle (degrees). If not provided, must provide latitude and longitude.
-#' @param omega Single scattering albedo factor
-#' @param omega_p Single scattering albedo factor
+#' @param omega Single scattering albedo at 400 nm. Default = 0.945
+#' @param omega_p Single scattering wavelength variation factor. Default = 0.095
+#' @param cloud_modification Logical. Should the cloud cover modification from Bird et al. (1987) be used. Default = TRUE.
 #' 
 #' @return A data frame containing spectral direct and diffuse irradiance by wavelength in units of photon flux density (photons per square meter per second)
 #' 
 #' @references Bird, R., Riordan, C. 1984. Simple solar spectral model for direct and diffuse irradiance on horizontal and titled planes at the Earth's surface for cloudless atmospheres. SERI/TR-2145-2436. Solar Energy Research Institute. 37 pp.
 #' @references Bird, R.E., Riordan, C., 1986. Simple solar spectral model for direct and diffuse irradiance on horizontal and tilted planes at the Earth’s surface for cloudless atmospheres. J. Clim. Appl. Meteorol. 25, 87–97. https://doi.org/10.1175/1520-0450(1986)025<0087:SSSMFD>2.0.CO;2
 
-spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of_incidence, n_wavelengths, ozone, albedo, surface_tilt, surface_azimuth = 180, surface_pressure, aod, water_vapor, w_v, r_v, z, asym, omega, omega_p) {
+spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of_incidence, ozone = NA, albedo, surface_tilt, surface_azimuth = 180, surface_pressure, aod, water_vapor, asym = 0.65, omega = 0.945, omega_p = 0.095, cloud_modification = FALSE) {
   
   # Longitude flag
   if(longitude > 0) {
@@ -41,11 +37,7 @@ spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of
   }
   
   # Photon flux constants
-  XH <- 6.626176e-34 # Planck's constant
-  XC <- 299792458 # Speed of light
-  EVOLT <- 1.6021892e-19 # Electron voltage 
   CONST <- (1/(6.626176e-34*299792458))*10^-10
-  XC2 <- 299792458 * 1e6
   
   surface_azimuth <- (surface_azimuth-180)/(180/3.14159)
   slope_tilt <- surface_tilt*pi/180
@@ -95,8 +87,12 @@ spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of
     oz_par <- c(oz_par, 0)
   }
   
-  
-  total_ozone <- 0.235+(oz_par[1] + oz_par[2]*sin(0.9865*(doy+oz_par[3])*0.017453)+0.02*sin(0.017453*(oz_par[4])*(oz_par[6])))*(sin(oz_par[5]*0.017453*latitude))^2
+  if(is.na(ozone)) {
+    total_ozone <- 0.235+(oz_par[1] + oz_par[2]*sin(0.9865*(doy+oz_par[3])*0.017453)+0.02*sin(0.017453*(oz_par[4])*(oz_par[6])))*(sin(oz_par[5]*0.017453*latitude))^2    
+  } else {
+    total_ozone <- ozone
+  }
+
   
   w_v <- c(0.3, 0.305, 0.31, 0.315, 0.32, 0.325, 0.33, 0.335, 0.34, 0.345, 0.35, 0.36, 0.37, 0.38, 
            0.39, 0.4, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.5, 0.51, 0.52, 0.53, 
@@ -143,19 +139,19 @@ spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of
   # Transmission
   omegl <- omega*exp(-1*omega_p*(log(w_v/0.4))^2) # Single scattering albedo
   transmission_rayleigh <- exp(-1*pressure_corr_airmass/(w_v^4*(115.6406-1.335/w_v^2))) # Rayleigh
-  transmission_toz <- exp(-1*absorption_ozone*amoz*ozone) # Total ozone
+  transmission_toz <- exp(-1*absorption_ozone*amoz*total_ozone) # Total ozone
   transmission_umg <- exp(-1.41*absorption_umg*pressure_corr_airmass/(1+118.3*absorption_umg*pressure_corr_airmass)^0.45) # Uniform mixed gasses using 118.3 (Bird and Riordan 1986)
   transmission_water <- exp(-0.2385*absorption_water*water_vapor*geometric_airmass/(1+20.07*absorption_water*absorption_water*water_vapor*geometric_airmass)^0.45) # Water vapor
   aero1 <- aod*((w_v/0.5)^(-1*alpha))
   transmission_aerosol <- exp(-1*geometric_airmass*aero1) # Aerosol
   
-  # Direct energy
+  # Direct
   direct_wm2 <- e_v*rad_vec*transmission_rayleigh*transmission_toz*transmission_umg*transmission_water*transmission_aerosol
   
-  # Diffuse energy
+  # Diffuse scattering
   alg <- log(1-asym)
-  afs <- alg*(1.459+alg*(0.1595+alg*0.4129)) # Forward scattering
-  bfs <- alg*(0.0783+alg*(-0.3824-alg*0.5874)) # Forward scattering
+  afs <- alg*(1.459+alg*(0.1595+alg*0.4129))
+  bfs <- alg*(0.0783+alg*(-0.3824-alg*0.5874))
   fsp <- 1-0.5*exp((afs+bfs/1.8)/1.8)
   
   total_as <- exp(-omegl*aero1*geometric_airmass)
@@ -175,7 +171,6 @@ spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of
   
   hz_diff <- numeric(length = length(w_v))
   hz_diff[w_v <= 0.45] <- (diff_ray[w_v <= 0.45]+diff_aer[w_v <= 0.45]+drgd[w_v <= 0.45])*(w_v[w_v <= 0.45]+0.55)^1.8
-  
   hz_diff[w_v > 0.45] <- (diff_ray[w_v > 0.45]+diff_aer[w_v > 0.45]+drgd[w_v > 0.45])
   
   ref <- (direct_wm2*cos(zenith_degrees*pi/180)+hz_diff)*albedo*(1-cos(slope_tilt))/2
@@ -183,6 +178,9 @@ spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of
   difsi <- 0.5*hz_diff*(1-(direct_wm2/e_v))*(1+cos(surface_tilt*pi/180))
   
   diffuse_wm2 <- ref+difsc+difsi
+  
+  # Cloud cover modification (Bird et al., 1987) *In development*
+  # diffuse_wm2[w_v <= 0.55] <- diffuse_wm2[w_v <= 0.55] * (w_v[w_v <= 0.55]+0.45)^-1
   
   # Total energy
   total_wm2 <- direct_wm2*cos_aoi+diffuse_wm2
