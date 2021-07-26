@@ -11,7 +11,7 @@ trawllight can be installed by starting R and running the following code. Instal
 
 ```
 require(devtools)
-install_github("sean-rohan/trawllight")
+install_github("sean-rohan-NOAA/trawllight")
 ```
 
 # References

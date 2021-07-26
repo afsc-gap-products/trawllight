@@ -10,7 +10,6 @@ radtran(
   doy,
   hour,
   minute,
-  tz,
   alpha,
   surface_pressure,
   water_vapor,
@@ -20,10 +19,11 @@ radtran(
   relative_humidity,
   wind_speed = 0,
   cloud_modification = TRUE,
+  cloud_droplet_radius = 11.8,
+  liquid_water_path = 125,
   water_refraction = 1.341,
   foam_spectrum = FALSE,
-  cloud_droplet_radius = 11.8,
-  liquid_water_path = 125
+  ozone = "vanheuklon"
 )
 }
 \arguments{
@@ -33,11 +33,9 @@ radtran(
 
 \item{doy}{Day of year (numeric vector of length 1 with a values of 1-365)}
 
-\item{hour}{Hour}
+\item{hour}{Local hour}
 
-\item{minute}{Minute}
-
-\item{tz}{Timezone}
+\item{minute}{Local minute}
 
 \item{alpha}{Power on angstrom turbidity expression}
 
@@ -57,17 +55,17 @@ radtran(
 
 \item{cloud_modification}{Logical. Use the cloud cover modification from Gregg (2002), based on Slingo (1989)? Default = TRUE.}
 
-\item{water_refraction}{Refractive index of water. Default for seawater = 1.341.}
-
-\item{foam_spectrum}{Logical. TRUE = use Gregg (2002) wavelength-dependent correction for sea-foam reflectance-based on Frouin et al. (1996). FALSE = original implementation with no spectral dependence (Gregg and Carder 1990)}
-
 \item{cloud_droplet_radius}{Cloud droplet radius in micrometers. Used for cloud_modification. Default 11.8 micrometers = mean oceanic value from Han et al. (1994).}
 
 \item{liquid_water_path}{Liquid water path used for cloud_modification.}
 
-\item{below_surface}{Logical. TRUE = estimate irradiance just below the sea surface. FALSE = estimate irradiance just above the sea surface.}
+\item{water_refraction}{Refractive index of water. Default for seawater = 1.341.}
+
+\item{foam_spectrum}{Logical. TRUE = use Gregg (2002) wavelength-dependent correction for sea-foam reflectance-based on Frouin et al. (1996). FALSE = original implementation with no spectral dependence (Gregg and Carder 1990)}
 
 \item{ozone}{Either a 1L numeric vector indicating the total ozone value or a character vector indicating an algorithmic approximation method. The only approximation method currently available is "vanheuklon" based on Van Heuklon (1979).}
+
+\item{below_surface}{Logical. TRUE = estimate irradiance just below the sea surface. FALSE = estimate irradiance just above the sea surface.}
 }
 \value{
 A data frame containing spectral direct and diffuse irradiance by wavelength at the sea surface and just below the sea surface.

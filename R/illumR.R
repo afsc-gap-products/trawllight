@@ -11,7 +11,7 @@
 #' @param full.output If true, returns sun and moon separately.
 #' @return Illuminance (lux) at the Earth's surface.
 
-illumR <- function(IY, IM, ID, LO, FINIT, ZZ, SK, HR, full.output = FALSE) {
+illumR <- illumR <- function(IY, IM, ID, LO, FINIT, ZZ, SK, HR, full.output = FALSE) {
   
   # Function to convert clock time to decimal time.
   DEG <- function(x) {

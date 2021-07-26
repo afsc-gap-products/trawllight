@@ -5,9 +5,8 @@
 #' @param latitude Latitude in decimal degrees (East is positive, West is negative)
 #' @param longitude Longitude in decimal degrees (North is positive, South is negative)
 #' @param doy Day of year (numeric vector of length 1 with a values of 1-365)
-#' @param hour Hour
-#' @param minute Minute
-#' @param tz Timezone
+#' @param hour Local hour
+#' @param minute Local minute
 #' @param alpha Power on angstrom turbidity expression 
 #' @param surface_pressure Surface pressure (milibars)
 #' @param water_vapor precipitable water vapor (cm)
@@ -20,9 +19,9 @@
 #' @param below_surface Logical. TRUE = estimate irradiance just below the sea surface. FALSE = estimate irradiance just above the sea surface.
 #' @param water_refraction Refractive index of water. Default for seawater = 1.341.
 #' @param foam_spectrum Logical. TRUE = use Gregg (2002) wavelength-dependent correction for sea-foam reflectance-based on Frouin et al. (1996). FALSE = original implementation with no spectral dependence (Gregg and Carder 1990)
-#' @param ozone Either a 1L numeric vector indicating the total ozone value or a character vector indicating an algorithmic approximation method. The only approximation method currently available is "vanheuklon" based on Van Heuklon (1979).
 #' @param cloud_droplet_radius Cloud droplet radius in micrometers. Used for cloud_modification. Default 11.8 micrometers = mean oceanic value from Han et al. (1994).
 #' @param liquid_water_path Liquid water path used for cloud_modification.
+#' @param ozone Either a 1L numeric vector indicating the total ozone value or a character vector indicating an algorithmic approximation method. The only approximation method currently available is "vanheuklon" based on Van Heuklon (1979).
 #' 
 #' @return A data frame containing spectral direct and diffuse irradiance by wavelength at the sea surface and just below the sea surface.
 #' 
@@ -33,14 +32,14 @@
 #' @references Slingo, A., 1989. A GCM parameterization for the shortwave radiative properties of water clouds. J. Atmos. Sci. 46, 1419–1427. https://doi.org/10.1175/1520-0469(1989)046<1419:AGPFTS>2.0.CO;2
 #' @references Van Heuklon, T.K., 1979. Estimating atmospheric ozone for solar radiation models. Sol. Energy 22, 63–68. https://doi.org/10.1016/0038-092X(79)90060-4
 
-radtran <- function(latitude, longitude, doy, hour, minute, tz, alpha, surface_pressure, water_vapor, aerosol_scale_height = NA, visual_range = NA, air_mass, relative_humidity, wind_speed = 0, cloud_modification = TRUE, water_refraction = 1.341, foam_spectrum = FALSE, cloud_droplet_radius = 11.8, liquid_water_path = 125) {
+solar_radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_pressure, water_vapor, aerosol_scale_height = NA, visual_range = NA, air_mass, relative_humidity, wind_speed = 0, cloud_modification = TRUE, cloud_droplet_radius = 11.8, liquid_water_path = 125, water_refraction = 1.341, foam_spectrum = FALSE, ozone = "vanheuklon") {
   
   # Numbers in parentheses correspond with equations in Gregg and Carder (1990) 
   
   # Photon flux constant
   CONST <- (1/(6.626176e-34*299792458))*10^-10
   
-  # Wavelength
+  # Wavelength (um)
   w_v <- c(350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 
            368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 
            386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 
@@ -62,7 +61,7 @@ radtran <- function(latitude, longitude, doy, hour, minute, tz, alpha, surface_p
            674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 687, 688, 689, 690, 691, 
            692, 693, 694, 695, 696, 697, 698, 699, 700)/1000
   
-  # Extraterrestrial solar radiation W m^-2 nm^-1)
+  # Extraterrestrial solar radiation W m^-2 um^-1)
   e_v <- c(0.961, 0.953, 0.949, 1.056, 1.122, 1.078, 1.047, 0.879, 0.752, 0.919, 1.062, 1.054, 1.047, 
            1.024, 0.998, 1.108, 1.259, 1.221, 1.156, 1.184, 1.197, 1.162, 1.144, 1.027, 0.953, 1.004, 
            1.004, 1.317, 1.317, 1.141, 1.139, 1.115, 1.083, 0.821, 0.858, 1.029, 1.026, 0.995, 1.01, 
@@ -429,8 +428,8 @@ radtran <- function(latitude, longitude, doy, hour, minute, tz, alpha, surface_p
                     direct_subsurface_pfd = direct_subsurface_pfd,
                     diffuse_surface_pfd = diffuse_surface_pfd,
                     diffuse_subsurface_pfd = diffuse_subsurface_pfd,
-                    direct_surface_wm2 = direct_surface_wm2,
-                    direct_subsurface_wm2 = direct_subsurface_wm2,
-                    diffuse_surface_wm2 = diffuse_surface_wm2,
-                    diffuse_subsurface_wm2 = diffuse_subsurface_wm2))
+                    direct_surface_wm2_nm = direct_surface_wm2,
+                    direct_subsurface_wm2_nm = direct_subsurface_wm2,
+                    diffuse_surface_wm2_nm = diffuse_surface_wm2,
+                    diffuse_subsurface_wm2_nm = diffuse_subsurface_wm2))
 }

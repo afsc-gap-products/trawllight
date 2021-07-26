@@ -10,7 +10,6 @@ spctral2(
   doy,
   hour,
   minute,
-  tz,
   alpha,
   angle_of_incidence,
   ozone = NA,
@@ -33,11 +32,9 @@ spctral2(
 
 \item{doy}{Day of year (numeric vector of length 1 with a values of 1-365)}
 
-\item{hour}{Hour}
+\item{hour}{Local hour}
 
-\item{minute}{Minute}
-
-\item{tz}{Timezone}
+\item{minute}{Local minute}
 
 \item{alpha}{Power on angstrom turbidity expression (default = 1.14 for rural areas}
 

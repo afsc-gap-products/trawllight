@@ -5,9 +5,8 @@
 #' @param latitude Latitude in decimal degrees (East is positive, West is negative)
 #' @param longitude Longitude in decimal degrees (North is positive, South is negative)
 #' @param doy Day of year (numeric vector of length 1 with a values of 1-365)
-#' @param hour Hour
-#' @param minute Minute
-#' @param tz Timezone
+#' @param hour Local hour
+#' @param minute Local minute
 #' @param alpha Power on angstrom turbidity expression (default = 1.14 for rural areas
 #' @param angle_of_incidence Angle of incidence of direct beam on flat surface (in degrees)
 #' @param ozone Ozone (O_3) in atmospheres per centimeter
@@ -27,7 +26,7 @@
 #' @references Bird, R., Riordan, C. 1984. Simple solar spectral model for direct and diffuse irradiance on horizontal and titled planes at the Earth's surface for cloudless atmospheres. SERI/TR-2145-2436. Solar Energy Research Institute. 37 pp.
 #' @references Bird, R.E., Riordan, C., 1986. Simple solar spectral model for direct and diffuse irradiance on horizontal and tilted planes at the Earth’s surface for cloudless atmospheres. J. Clim. Appl. Meteorol. 25, 87–97. https://doi.org/10.1175/1520-0450(1986)025<0087:SSSMFD>2.0.CO;2
 
-spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of_incidence, ozone = NA, albedo, surface_tilt, surface_azimuth = 180, surface_pressure, aod, water_vapor, asym = 0.65, omega = 0.945, omega_p = 0.095, cloud_modification = FALSE) {
+solar_spctral2 <- function(latitude, longitude, doy, hour, minute, alpha, angle_of_incidence, ozone = NA, albedo, surface_tilt, surface_azimuth = 180, surface_pressure, aod, water_vapor, asym = 0.65, omega = 0.945, omega_p = 0.095, cloud_modification = FALSE) {
   
   # Longitude flag
   if(longitude > 0) {
@@ -103,7 +102,7 @@ spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of
            1.558, 1.578, 1.592, 1.61, 1.63, 1.646, 1.678, 1.74, 1.8, 1.86, 1.92, 1.96, 1.985, 2.005, 
            2.035, 2.065, 2.1, 2.148, 2.198, 2.27, 2.36, 2.45, 2.5, 2.6, 2.7, 2.8, 2.9, 3, 3.1, 3.2, 
            3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4)
-  e_v <- c(535.9, 558.3, 622, 692.7, 715.1, 832.9, 961.9, 931.9, 900.6, 911.3, 975.5, 975.9, 1119.9, 
+  e_v <- 1e-3*c(535.9, 558.3, 622, 692.7, 715.1, 832.9, 961.9, 931.9, 900.6, 911.3, 975.5, 975.9, 1119.9, 
            1103.8, 1033.8, 1479.1, 1701.3, 1740.4, 1587.2, 1837, 2005, 2043, 1987, 2027, 1896, 1909, 
            1927, 1831, 1891, 1898, 1892, 1840, 1768, 1728, 1658, 1524, 1531, 1420, 1399, 1374, 1373, 
            1298, 1269, 1245, 1223, 1205, 1183, 1148, 1091, 1062, 1038, 1022, 998.7, 947.2, 893.2, 
@@ -194,7 +193,7 @@ spctral2 <- function(latitude, longitude, doy, hour, minute, tz, alpha, angle_of
               direct_pfd = pfd_dni,
               diffuse_pfd = pfd_dif,
               total_pfd = pfd_tot,
-              direct_wm2 = direct_wm2,
-              diffuse_wm2 = diffuse_wm2,
-              total_wm2 = total_wm2))
+              direct_wm2_nm = direct_wm2,
+              diffuse_wm2_nm = diffuse_wm2,
+              total_wm2_nm = total_wm2))
 }
