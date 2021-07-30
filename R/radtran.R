@@ -404,7 +404,7 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
     tau_a <- beta*(w_v^-1) 
     
     # (15) Transmittance: Rayleigh (Bird and Riordan 1986)
-    transmission_rayleigh <- exp(-1*pressure_corr_airmass/(w_v^4*(115.6406*-1.335/w_v^2)))
+    transmission_rayleigh <- exp(-1*pressure_corr_airmass/(w_v^4*(115.6406-1.335/w_v^2)))
     
     # (30) Transmittance: Aerosol 
     transmission_aerosol <- exp(-1*geometric_airmass*tau_a)
