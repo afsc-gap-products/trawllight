@@ -83,7 +83,7 @@ illumR <- illumR <- function(IY, IM, ID, LO, FINIT, ZZ, SK, HR, full.output = FA
   QQ <- SD * CI - CD * SI * CS
   PP <- -CD * sin(HH * DR)
   AZ <- atan(PP/QQ) * RD
-
+  
   if(QQ < 0) {
     AZ <- AZ + 180
   }
@@ -212,9 +212,13 @@ illumR <- illumR <- function(IY, IM, ID, LO, FINIT, ZZ, SK, HR, full.output = FA
   IHA <- 50 * (1-cos(EE)) + 0.5
   
   if(full.output) {
-    IS <- data.frame(SUN_ILL = ISUN, MOON_ILL = IMOON, AS = AS, AZ = AZ, CB = CB, CE = CE, DR = DR, EE = EE, GG = GG, HA = HA, HH = HH, HINIT = HINIT, HR = HR, IAZ = IAZ, ID = ID, IHA = IHA, IL = IL, IM = IM, IS = IS,
-                     IY = IY, JJ = JJ, LI = LI, LO = LO, LS = LS, MM = MM, NN = NN, OO = OO, PP = PP, QQ = QQ, RD = RD, SB = SB, SD = SD, SE = SE, SI = SI, SK = SK, SS = SS,
-                     SV = SV, TT = TT, T_0 = T_0, UU = UU, VV = VV, WW = WW, XX = XX, YY = YY, ZT = ZT, ZZ = ZZ)
+    IS <- data.frame(SUN_ILL = ISUN, MOON_ILL = IMOON, AS = AS, AZ = AZ, CB = CB, CE = CE, DR = DR, 
+                     EE = EE, GG = GG, HA = HA, HH = HH, HINIT = HINIT, HR = HR, IAZ = IAZ, ID = ID, 
+                     IHA = IHA, IL = IL, IM = IM, IS = IS, IY = IY, JJ = JJ, LI = LI, LO = LO, 
+                     LS = LS, MM = MM, NN = NN, OO = OO, PP = PP, QQ = QQ, RD = RD, SB = SB, 
+                     SD = SD, SE = SE, SI = SI, SK = SK, SS = SS,
+                     SV = SV, TT = TT, T_0 = T_0, UU = UU, VV = VV, WW = WW, XX = XX, YY = YY, 
+                     ZT = ZT, ZZ = ZZ)
   }
   
   return(IS)
