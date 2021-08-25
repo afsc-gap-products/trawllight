@@ -350,8 +350,10 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
     # (Slingo 1989 - Eqn. 14)
     a_4 <- (1-f_foreward) * omega_clouds * (1-beta_direct)
     
-    # (Slingo 1989 - Eqn. 15)
-    epsilon <- sqrt(abs(a_1^2 - a_2^2))
+    # (Slingo 1989 - Eqn. 15) - With changes to handle zeros
+    epsilon <- a_1^2 - a_2^2
+    epsilon[epsilon < 1e-9] <- 1e-9
+    epsilon <- epsilon^0.5
     
     # (Slingo 1989 - Eqn. 16)
     M <- a_2 / (a_1+epsilon)
