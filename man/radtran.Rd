@@ -23,7 +23,9 @@ radtran(
   liquid_water_path = 125,
   water_refraction = 1.341,
   foam_spectrum = FALSE,
-  ozone = "vanheuklon"
+  ozone = "vanheuklon",
+  w_v = 350:700,
+  e_v = NA
 )
 }
 \arguments{
@@ -65,13 +67,17 @@ radtran(
 
 \item{ozone}{Either a 1L numeric vector indicating the total ozone value or a character vector indicating an algorithmic approximation method. The only approximation method currently available is "vanheuklon" based on Van Heuklon (1979).}
 
+\item{w_v}{Numeric vector indicating wavelengths to use. Default set to maximum range of 350:700}
+
+\item{e_v}{Optional. Numeric vector of top-of-atmosphere irradiances. If not provided, uses default 1-nm resolution solar TOA irradiance from Gregg and Carder (1990).}
+
 \item{below_surface}{Logical. TRUE = estimate irradiance just below the sea surface. FALSE = estimate irradiance just above the sea surface.}
 }
 \value{
 A data frame containing spectral direct and diffuse irradiance by wavelength at the sea surface and just below the sea surface.
 }
 \description{
-An R-based implementation of the Gregg and Carder (1990) model for cloudless maritime atmospheres, along with an option to use the delta-Eddington approximation of two-stream approach for spectral cloud transmission following Slingo (1989). Produces estimates of direct and diffuse spectral irradiance at the sea surface and just below the sea surface at 1 nm resolution for 350-700 nm wavelengths. Atmospheric path length calculation follows Kasten and Young (1989) instead of Kasten (1965), as suggested by Gregg (2002). Ozone scale height calculation
+An R-based implementation of the Gregg and Carder (1990) model for cloudless maritime atmospheres, along with an option to use the delta-Eddington approximation of two-stream approach for spectral cloud transmission following Slingo (1989). Produces estimates of direct and diffuse spectral irradiance at the sea surface and just below the sea surface at 1 nm resolution for 350-700 nm wavelengths. Atmospheric path length calculation (air mass) follows Kasten and Young (1989) for zenith angles up to 90 degrees. At zenith angles larger than 90 degrees atmospheric path lengths are calculated using Schoenberg's (1929) spherical approximation assuming an earth radius of 6371 km and atmosphere height of 9 km. Ozone can be user-specified or approximated following Van Heuklon (1979).
 }
 \references{
 Gregg, W.W., 2002. A coupled ocean-atmosphere radiative model for global ocean biogeochemical models. NASA Global Modeling and Assimilation Series, M. Suarez (ed.), NASA Technical Memorandum 2002-104606, Volume 22.
@@ -81,6 +87,8 @@ Gregg, W.W., Carder, K.L., 1990. A simple spectral solar irradiance model for cl
 Kasten, F., 1965. A new table and approximation formula for the relative optial air mass. Arch. für Meteorol. Geophys. und Bioklimatologie Ser. B 14, 206–223. https://doi.org/10.1007/BF02248840
 
 Kasten, F., Young, A.T., 1989. Revised optical air mass tables and approximation formula. Appl. Opt. 28, 4735–4738. https://doi.org/10.1364/AO.28.004735
+
+Schoenberg, E. (1929). Theoretische Photometrie, g) Über die Extinktion des Lichtes in der Erdatmosphäre. In Handbuch der Astrophysik. Band II, erste Hälfte. Berlin: Springer.
 
 Slingo, A., 1989. A GCM parameterization for the shortwave radiative properties of water clouds. J. Atmos. Sci. 46, 1419–1427. https://doi.org/10.1175/1520-0469(1989)046<1419:AGPFTS>2.0.CO;2
 

@@ -35,7 +35,7 @@
 #' @references Slingo, A., 1989. A GCM parameterization for the shortwave radiative properties of water clouds. J. Atmos. Sci. 46, 1419–1427. https://doi.org/10.1175/1520-0469(1989)046<1419:AGPFTS>2.0.CO;2
 #' @references Van Heuklon, T.K., 1979. Estimating atmospheric ozone for solar radiation models. Sol. Energy 22, 63–68. https://doi.org/10.1016/0038-092X(79)90060-4
 
-radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_pressure, water_vapor, aerosol_scale_height = NA, visual_range = NA, air_mass, relative_humidity, wind_speed = 0, cloud_modification = TRUE, cloud_droplet_radius = 11.8, liquid_water_path = 125, water_refraction = 1.341, foam_spectrum = FALSE, ozone = "vanheuklon", w_v = 350:700, e_v = NA) {
+radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_pressure, water_vapor = NA, aerosol_scale_height = NA, visual_range = NA, air_mass = NA, relative_humidity = NA, wind_speed = 0, cloud_modification = TRUE, cloud_droplet_radius = 11.8, liquid_water_path = 125, water_refraction = 1.341, foam_spectrum = FALSE, ozone = "vanheuklon", w_v = 350:700, e_v = NA) {
   
   # Numbers in parentheses correspond with equations in Gregg and Carder (1990) 
   
@@ -229,7 +229,7 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
   transmission_water <- exp(-0.2385*absorption_water*water_vapor*geometric_airmass/(1+20.07*absorption_water*water_vapor*geometric_airmass)^0.45)
   
   # (35) Asymmetry parameter for scattering phase function
-  if(alpha <0) {
+  if(alpha < 0) {
     asym <- 0.82
   } else if(alpha > 1.2) {
     asym <- 1.2
@@ -241,7 +241,7 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
   b_3 <- log(1-asym)
   b_1 <- b_3*(1.459+b_3*(0.1595+b_3*0.4129))
   b_2 <- b_3*(0.0783+b_3*(-0.3824-b_3*0.5874))
-  fsp <- 1-0.5*exp((b_1+b_2*cos_z)*cos_z)
+  fsp <- max(c(1-0.5*exp((b_1+b_2*cos_z)*cos_z), 0))
   
   # (36) Single-scattering albedo
   omega_a <- (-0.0032*air_mass+0.972) * exp(3.06*relative_humidity*10^-4)
@@ -276,14 +276,16 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
   # (44-47) Direct specular reflectance
   rho_dsp <- 0
   
-  if(zenith_degrees >= 40) {
-    if(wind_speed > 2) {
-      rho_dsp <- 0.0253*exp((-7.14e-4*wind_speed+0.0618)*(zenith_degrees-40))
+  if(zenith_degrees < 40 | wind_speed < 2) {
+    if(zenith_degrees == 0) {
+      rho_dsp <- 0.0211
     } else {
       refracted_angle <- asin(sin(zenith_radians)/water_refraction)
       rho_dsp <- 0.5*(0.5*sin(zenith_radians-refracted_angle)^2/sin(zenith_radians+refracted_angle)^2+
                         tan(zenith_radians-refracted_angle)^2/tan(zenith_radians+refracted_angle)^2)
     }
+  } else {
+    rho_dsp <- 0.0253*exp((-7.14e-4*wind_speed+0.0618)*(zenith_degrees-40))
   }
   
   # Diffuse specular reflectance (Burt 1954)
@@ -295,9 +297,11 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
   
   # (37) Surface reflectance (direct)
   rho_direct <- rho_dsp + rho_f
+  rho_direct[rho_direct > 1] <- 1
   
   # (38) Surface reflectance (diffuse)
   rho_diffuse <- rho_ssp + rho_f
+  rho_diffuse[rho_diffuse > 1] <- 1
   
   # Cloudless sky = 100% transmisson
   transmission_cloud_direct <- 1
@@ -362,19 +366,24 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
     E <- exp(-1*epsilon*tau_clouds)
     
     # (Slingo 1989 - Eqn. 18)
-    gamma_1 <- ((1-omega_clouds*f_foreward)*a_3-cos_z*(a_1*a_3+a_2*a_4))/((1-omega_clouds*f_foreward)^2-epsilon^2*cos_z^2)
+    gamma_1 <- ((1-omega_clouds*f_foreward)*a_3-cos_z*(a_1*a_3+a_2*a_4))/((1-omega_clouds*f_foreward)^2-epsilon^2*cos_z^2 + 0.00001)
     
     # (Slingo 1989 - Eqn. 19)
-    gamma_2 <- -1*((1-omega_clouds*f_foreward)*a_4-cos_z*(a_1*a_4+a_2*a_3))/((1-omega_clouds*f_foreward)^2-epsilon^2*cos_z^2)
+    gamma_2 <- -1*((1-omega_clouds*f_foreward)*a_4-cos_z*(a_1*a_4+a_2*a_3))/((1-omega_clouds*f_foreward)^2-epsilon^2*cos_z^2 + 0.00001)
     
     # Direct cloud transmission (Slingo 1989 - Eqn. 20)
     transmission_cloud_direct <- exp(-1*(1-omega_clouds*f_foreward)*tau_clouds/cos_z)
+    if(cos_z < 0) {
+      transmission_cloud_direct[transmission_cloud_direct > 1] <- 0  
+    } else {
+      transmission_cloud_direct[transmission_cloud_direct > 1] <- 1  
+    }
     
     # Diffuse reflectivity for diffuse incident radiation (Slingo 1989 - Eqn. 21)
-    ref_diffuse <- M*(1-E^2)/(1-E^2*M^2)
+    ref_diffuse <- M*(1-E^2)/(1-E^2*M^2 + 0.00001)
     
     # Diffuse transmissiviity for diffuse incident radiation (Slingo 1989 - Eqn. 22)
-    transmission_cloud_diffuse <- E*(1-M^2)/(1-E^2*M^2)
+    transmission_cloud_diffuse <- E*(1-M^2)/(1-E^2*M^2 + 0.00001)
     
     # Diffuse reflectivity for direct incident radiation (Slingo 1989 - Eqn. 23)
     ref_direct <- -1*gamma_2*ref_diffuse-gamma_1*transmission_cloud_diffuse*transmission_cloud_direct + gamma_1
@@ -420,13 +429,14 @@ radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_press
   
   # (9) Direct downwelling irradiance
   direct_surface_wm2 <- e_v*etc_factor*cos_z*transmission_aerosol*transmission_umg*transmission_water*transmission_toz*transmission_rayleigh*transmission_cloud_total_direct
-  
+  direct_surface_wm2[direct_surface_wm2 < 0] <- 0
   direct_subsurface_wm2 <- direct_surface_wm2*(1-rho_direct)
   
   # (4) Diffuse component from Rayleigh scattering
   diffuse_rayleigh <- e_v*etc_factor*cos_z*transmission_toz*transmission_umg*transmission_water*transmission_aa*(1-transmission_rayleigh^0.95)*0.5
-  
+  diffuse_rayleigh[diffuse_rayleigh < 0] <- 0
   diffuse_scattering <- e_v*etc_factor*cos_z*transmission_toz*transmission_umg*transmission_water*transmission_rayleigh*(1-transmission_as)*fsp*transmission_cloud_diffuse
+  diffuse_scattering[diffuse_scattering < 0] <- 0
   
   # (10) Diffuse downwelling irradiance
   diffuse_surface_wm2 <- diffuse_rayleigh + diffuse_scattering
