@@ -73,3 +73,6 @@ Bird, R., Riordan, C. 1984. Simple solar spectral model for direct and diffuse i
 
 Bird, R.E., Riordan, C., 1986. Simple solar spectral model for direct and diffuse irradiance on horizontal and tilted planes at the Earth’s surface for cloudless atmospheres. J. Clim. Appl. Meteorol. 25, 87–97. https://doi.org/10.1175/1520-0450(1986)025<0087:SSSMFD>2.0.CO;2
 }
+\author{
+Sean Rohan \email{sean.rohan@noaa.gov}
+}

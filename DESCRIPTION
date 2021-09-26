@@ -1,7 +1,7 @@
 Package: trawllight
 Type: Package
 Title: Derive apparent optical properties from trawl-mounted light sensors
-Version: 2.1.2
+Version: 3.0.0
 Authors@R: person("Sean ", "Rohan", email = "sean.rohan@noaa.gov", role = c("aut", "cre"))
 Maintainer: Sean K. Rohan <sean.rohan@noaa.gov>
 Description: Quality control and derive pparent optical properties from irradiance measurements obtained during bottom-trawl surveys using archival tags equipped with a photoelectric cell.
@@ -14,6 +14,12 @@ Imports: mgcv,
         fishmethods,
         lubridate,
         kedd,
+        dplyr,
+        VGAM,
+        ggplot2,
+        reshape,
+        reshape2,
+        mgcv,
         OSCV,
         ICV
 Suggests: knitr,

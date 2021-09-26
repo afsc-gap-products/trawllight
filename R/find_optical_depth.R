@@ -10,8 +10,8 @@
 #' @param return.col Optional. Name of the column for output. Default = F.
 
 #' @return Returns either a numerical vector with the optical depth for the cast, or a data frame with the input data and the optical depth data for the cast. Optical depths exceeding the maximum depth of the cast are returned as an NA.
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 find_optical_depth <- function(x,
                                od.col = "optical_depth",

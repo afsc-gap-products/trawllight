@@ -31,3 +31,6 @@ Illuminance (lux) at the Earth's surface.
 \description{
 Vectorized version of Janiczek and DeYoung (1987) for R
 }
+\author{
+Sean Rohan \email{sean.rohan@noaa.gov}
+}

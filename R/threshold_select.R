@@ -7,11 +7,7 @@
 #' @param bandwidth.select A vector of length one indicating which bandwidth select method to use. Currently available options are "UCV" (default), "OSCV, and "nrd0" See Details below.
 #' @param mode.adjust A numeric vector of length one which adjusts the reference level for the mode for cases where the density function and derivative of the density function use different bandwidths. Default value generally should not be adjusted -0.1.
 #' @param make.plots Logical vector indicating if diagnostic plots should be generated.
-#'
 #' @return Returns a list which includes a threshold indicating the estimated level for incorrect archival tag orientation, bandwidth for the kernel density function (h.0), bandwidth for the derivative of the kernel density function (h.1), and the proportion of data excluded by the threshold (omit.rate)
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
-#'
 #' @details bandwidth.select method can be one of unbiased cross-validation (UCV) implemented in the kedd package, one-sided cross validation (OSCV) implemented in the OSCV package, or the rule-of-thumb method implemented in stats::bandwidth ("nrd0").
 #'
 #' @references Jones, M. C., Marron, J. S. and Sheather, S. J. (1996). A brief survey of bandwidth selection for density estimation. Journal of the American Statistical Association, 91, 401–407.
@@ -19,6 +15,8 @@
 #' @references Savchuk, O.Y., Hart, J.D., and Sheather, S.J. (2010). Indirect cross-validation for density estimation. Journal of the American Statistical Association. 105, 415-423. doi: 10.1198/jasa.2010.tm08532
 #' @references Scott, D.W. and George, R. T. (1987). Biased and unbiased cross-validation in density estimation. Journal of the American Statistical Association, 82, 1131–1146.
 #' @references Silverman, B. W. (1986) Density Estimation. London: Chapman and Hall.
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 
 threshold_select <- function(vals, method = "kernel",

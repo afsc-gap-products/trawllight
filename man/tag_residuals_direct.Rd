@@ -34,5 +34,5 @@ tag_residuals_direct(
 \code{tag_residuals_direct} uses a linear model to estimate the relationship between surface light and light below the surface for the specified depth bins.
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

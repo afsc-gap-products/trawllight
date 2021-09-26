@@ -11,14 +11,12 @@
 #' @param time.col A character vector with the name of the column containing start time.
 #' @param light.col A character vector with the name of the column containing water column light measurements.
 #' @param ... Additional values for gam.
-#'
 #' @return Returns a data frame containing input data, solar position, photosynthetically active radiation, and generalized additive model residuals.
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
-#'
 #' @references Frouin, R., Lingner, D.W., Gautier, C., Baker, K.S., and Smith, R.C. 1989. A simple analytical formula to compute clear sky total and photosynthetically available solar irradiance at the ocean surface. J. Geophys. Res. 94(C7): 9731. doi:10.1029/JC094iC07p09731.
 #' @references  Gary A. Nelson (2017). fishmethods: Fishery Science Methods and Models in R. R package version 1.10-4.https://CRAN.R-project.org/package=fishmethods
 #' @references Wood, S.N. (2011) Fast stable restricted maximum likelihood and marginal likelihood estimation of semiparametric generalized linear models. Journal of the Royal Statistical Society (B) 73(1):3-36
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs = "cr"),
                                    utc.offset = -8,

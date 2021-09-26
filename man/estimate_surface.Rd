@@ -30,5 +30,5 @@ estimate_surface(
 Uses the linear attenuation coefficient of downwelling irradiance for the reference depth bin for cases with missing data.
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

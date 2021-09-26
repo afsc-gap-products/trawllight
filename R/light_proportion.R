@@ -6,9 +6,8 @@
 #' @param light.col Name of the column containing light measurements.
 #' @param depth.col Name of the column containing depth measurements.
 #' @return Returns a data frame containing input values, the proportion of light relative to the highest observed light measurement as \code{light_ratio}, and the attenuation coefficient of diffuse downwelling irradiance relative to the highest observed light measurement as \code{k_linear}.
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
-#'
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 light_proportion <- function(x, light.col = "trans_llight", depth.col = "cdepth", ...) {
 

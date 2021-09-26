@@ -33,3 +33,6 @@ Data frame with light by depth bin and continuity grade (1 = Good, -999 = Bad)
 \description{
 \code{filter_stepwise} aggregates light measurements from a single cast into depth bins using a specificed function (e.g. 'median'), removes light measurements using a stepwise algorithm, and assigns data continuity grades based on a threshold criteria.
 }
+\author{
+Sean Rohan \email{sean.rohan@noaa.gov}
+}

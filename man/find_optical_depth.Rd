@@ -33,5 +33,5 @@ Returns either a numerical vector with the optical depth for the cast, or a data
 Function to estimate the depth of a user-specified optical depth.
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

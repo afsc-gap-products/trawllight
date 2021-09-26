@@ -19,5 +19,5 @@ Optical depth
 Kirk, J.T.O. 2011. Light and photosynthesis in aquatic ecosystems. In 3rd edition. Cambridge University Press, New York.
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

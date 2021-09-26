@@ -9,8 +9,8 @@
 #' @param depth.col A character vector with the name of the column containing depths.
 #' @param depth.bins Depth bins for which linear regression should be conducted.
 #' @param ... Additional arguments
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 tag_residuals_direct <- function(x, formula = log10(trans_llight) ~ log10(surf_trans_llight) + interaction(vessel, cruise), water.col = "trans_llight", surface.col = "surf_trans_llight", depth.col = "cdepth", depth.bins = c(1, 3, 5, 7, 9), ...) {
   names(x)[names(x) == water.col] <- "trans_llight"

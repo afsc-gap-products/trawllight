@@ -10,8 +10,8 @@
 #' @param output.name Name of the orientation column. Default = "orientation"
 
 #' @return Returns `x` with an new column indicating the assigned orientation.
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 assign_orientation <- function(x, formula = vessel + cruise + haul ~ cdepth,
                                resid.col,

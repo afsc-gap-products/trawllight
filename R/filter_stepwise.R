@@ -8,6 +8,8 @@
 #' @param agg.fun Function used to aggregate light measurements for each depth bin.
 #' @param ... Additional arguments passed to findInterval function for binning light measurements
 #' @return Data frame with light by depth bin and continuity grade (1 = Good, -999 = Bad)
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 filter_stepwise <- function(cast.data,
                             light.col,

@@ -8,8 +8,8 @@
 #' @param light.col Name of the column containing light measurement. Default = "trans_llight"
 #' @param depth.col Name of the column containing depth. Default = "cdepth"
 #' @param id.col Vector of column names which uniquely identify data for a single cast.
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 # Back-calculate light ratios to surface
 estimate_surface <- function(x,

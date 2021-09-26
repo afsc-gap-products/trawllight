@@ -43,5 +43,5 @@ Hurvich, C.M., Simonoff, J.S., and Tsai, C.-L. 1998. Smoothing parameter selecti
 Xiao-Feng Wang (2010). fANCOVA: Nonparametric Analysis of Covariance. R package version 0.5-1. https://CRAN.R-project.org/package=fANCOVA
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

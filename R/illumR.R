@@ -10,6 +10,8 @@
 #' @param HR Time based on a 24 hour clock, as a numeric vector (e.g. 820, 1330) 
 #' @param full.output If true, returns sun and moon separately.
 #' @return Illuminance (lux) at the Earth's surface.
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 illumR <- illumR <- function(IY, IM, ID, LO, FINIT, ZZ, SK, HR, full.output = FALSE) {
   

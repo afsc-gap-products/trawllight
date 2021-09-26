@@ -45,5 +45,5 @@ Scott, D.W. and George, R. T. (1987). Biased and unbiased cross-validation in de
 Silverman, B. W. (1986) Density Estimation. London: Chapman and Hall.
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

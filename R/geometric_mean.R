@@ -4,6 +4,8 @@
 #'
 #' @param x A numeric vector
 #' @param na.rm Logical. Should NA values be omitted from calculation? Default = T
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 geometric.mean <- function(x, na.rm = T) {
 

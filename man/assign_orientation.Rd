@@ -31,5 +31,5 @@ Function to assign orientation based on visual inspection of residual plots. Ass
 simultaneously.
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

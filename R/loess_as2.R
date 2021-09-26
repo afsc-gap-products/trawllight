@@ -16,7 +16,8 @@
 #' @references Golub, G., Heath, M. and Wahba, G. (1979). Generalized cross validation as a method for choosing a good ridge parameter. Technometrics. 21, 215–224.
 #' @references Hurvich, C.M., Simonoff, J.S., and Tsai, C.L. (1998), Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion. Journal of the Royal Statistical Society B. 60, 271–293.
 #' @references Xiao-Feng Wang (2010). fANCOVA: Nonparametric Analysis of Covariance. R package version 0.5-1. https://CRAN.R-project.org/package=fANCOVA
-
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 loess.as2 <- function (x, y, degree = 1, criterion = c("aicc", "gcv"), family = c("gaussian", "symmetric"), min.bins = 3, user.span = NULL, plot = FALSE, ...)
 {

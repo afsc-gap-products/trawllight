@@ -4,11 +4,10 @@
 #'
 #' @param x A vector of light measurements to be converted to optical depth.
 #' @return Optical depth
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
-#'
 #' @references Kirk, J.T.O. 2011. Light and photosynthesis in aquatic ecosystems. In 3rd edition. Cambridge University Press, New York.
-#'
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
+
 calculate_od <- function(x) {
   return(log(1)-log(x/max(x)))
 }

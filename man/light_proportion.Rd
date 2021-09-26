@@ -20,5 +20,5 @@ Returns a data frame containing input values, the proportion of light relative t
 \code{light_proportion} calculates the proportion of light and the linear attenuation coefficient for each depth bin, relative to the highest observed light level for a cast.
 }
 \author{
-S.K. Rohan \email{skrohan@uw.edu}
+Sean Rohan \email{sean.rohan@noaa.gov}
 }

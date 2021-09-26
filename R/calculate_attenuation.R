@@ -10,11 +10,10 @@
 #' @param light.predict Logical indicating whether predicted values for light should be returned.
 #' @param ... Additional arguments passed to loess fitting function
 #' @return Returns a list containing three data frames: \code{attenuation} contains depth and fitted values of vertical diffuse attenuation coefficient, \code{loess.fit} contains the model summary statistics, and \code{fit_residuals} contains model fit residuals.
-#'
-#' @author S.K. Rohan \email{skrohan@@uw.edu}
-#'
 #' @references Hurvich, C.M., Simonoff, J.S., and Tsai, C.-L. 1998. Smoothing parameter selection in nonparametric regression using an improved Akaike information criterion. J. R. Stat. Soc. B 60(2): 271-293.
 #' @references Xiao-Feng Wang (2010). fANCOVA: Nonparametric Analysis of Covariance. R package version 0.5-1. https://CRAN.R-project.org/package=fANCOVA
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 
 calculate_attenuation <- function(x,

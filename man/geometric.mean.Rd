@@ -14,3 +14,6 @@ geometric.mean(x, na.rm = T)
 \description{
 Calculates the geometric mean of a numeric vector.
 }
+\author{
+Sean Rohan \email{sean.rohan@noaa.gov}
+}

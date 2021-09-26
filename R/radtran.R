@@ -34,6 +34,8 @@
 #' @references Schoenberg, E. (1929). Theoretische Photometrie, g) Über die Extinktion des Lichtes in der Erdatmosphäre. In Handbuch der Astrophysik. Band II, erste Hälfte. Berlin: Springer.
 #' @references Slingo, A., 1989. A GCM parameterization for the shortwave radiative properties of water clouds. J. Atmos. Sci. 46, 1419–1427. https://doi.org/10.1175/1520-0469(1989)046<1419:AGPFTS>2.0.CO;2
 #' @references Van Heuklon, T.K., 1979. Estimating atmospheric ozone for solar radiation models. Sol. Energy 22, 63–68. https://doi.org/10.1016/0038-092X(79)90060-4
+#' @author Sean Rohan \email{sean.rohan@@noaa.gov}
+#' @export
 
 radtran <- function(latitude, longitude, doy, hour, minute, alpha, surface_pressure, water_vapor = NA, aerosol_scale_height = NA, visual_range = NA, air_mass = NA, relative_humidity = NA, wind_speed = 0, cloud_modification = TRUE, cloud_droplet_radius = 11.8, liquid_water_path = 125, water_refraction = 1.341, foam_spectrum = FALSE, ozone = "vanheuklon", w_v = 350:700, e_v = NA) {
   
