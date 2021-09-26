@@ -3,7 +3,7 @@
 # trawllight
 The trawllight R package contains functions to implement an algorithm that derives apparent optical properties from light measurements collected during NOAA bottom-trawl surveys. A description of the light data collection protocol, algorithm subroutines, and algorithm performance is provided in Rohan et al. (2020) and Rohan et al. (2021). Algorithm subroutines are contained in individual functions in the trawllight package.
 
-The most recent version of the trawllight package was built in R 4.0.4.
+The most recent version of the trawllight package was built in R 4.1.1.
 
 # Installation
 
