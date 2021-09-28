@@ -574,3 +574,32 @@ vertical_profiles <- function(light.data, cast.data) {
   light.data <- subset(light.data, is.na(updown) == F)
   return(light.data)
 }
+
+#' Convert radiometric energy to photon flux density
+#' 
+#' Convert radiometric energy in watts to micromoles of photons per meter squared per second.
+#' 
+#' @param x Numeric vector. Energy for a wavelength in units of watts.
+#' @param wavelength Numeric vector.Wavelength in nanometers.
+#' @return Numeric vector of energy in photon flux density.
+#' @export
+
+energy_to_quanta <- function(x, wavelength) {
+  return(x/(1e-6*6.02214076*10^23*(3e8/(wavelength*10e-9))*6.63e-34))
+  
+  
+}
+
+#' Photon flux density to radiometric energy 
+#' 
+#' Convert quantum units of micromoles of photons per meter squared per second to radiometric energy (watts per meter squared per second)
+#' 
+#' Convert energy to quanta based on wavelength.
+#' @param x Numeric vector. Energy for a wavelength in units of watts.
+#' @param wavelength Numeric vector.Wavelength in nanometers.
+#' @return Numeric vector of energy in radiometric energy in watts.
+#' @export
+
+quanta_to_energy <- function(x, wavelength) {
+  return(x*1e-6*6.02214076*10^23*(3e8/(wavelength*10e-9))*6.63e-34)
+}
