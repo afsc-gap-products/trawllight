@@ -6,3 +6,7 @@ inst/doc
 .gitignore
 .Rbuildignore
 .Rproj.user
+
+/imports/
+/output/
+/data/
