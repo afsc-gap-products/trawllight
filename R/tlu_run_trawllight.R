@@ -52,7 +52,7 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
   }
   
   if(!file.exists(here::here("output", paste0("temp_", region_light, "_filtered_huds.rds")))) {
-    print("tlu_run_trawllight: Combining residuals and interpolated HUDS, setting and filtering on QA/QC flags, and recalculating optical depth for interpolated data.")
+    print("tlu_run_trawllight: Combining residuals and interpolated HUDS, filtering using QA/QC criteria, and recalculating optical depth for interpolated data.")
     readRDS(here::here("output", paste0("temp_", region_light, "_tag_residuals.rds"))) |>
       trawllight:::tlu_use_casts() |> 
       merge(readRDS(here::here("output", paste0("temp_", region_light, "_interp_huds.rds")))) |>
