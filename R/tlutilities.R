@@ -143,8 +143,6 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, ...) {
       warning(paste("process_all_surface: Deck light measurements not found in" , paste(dir.structure[t])))
     } else {
       
-      
-      
       #Import first deck file
       deck.data <- read.csv(file = deck.files[1], header = F, skip = 3)
       deck.data$ctime <- paste(deck.data[,1], deck.data[,2], sep = " ")
@@ -152,7 +150,9 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, ...) {
       # Import additional deck files if multiple exist in one directory
       if(length(deck.files) > 1) {
         for(b in 2:length(deck.files)) {
-          deck.data <- rbind(deck.data, read.csv(file = deck.files[b], header = F, skip = 3))
+          add.deck <- read.csv(file = deck.files[b], header = F, skip = 3)
+          add.deck$ctime <- paste(add.deck[,1], add.deck[,2], sep = " ")
+          deck.data <- rbind(deck.data, add.deck)
         }
       }
       
