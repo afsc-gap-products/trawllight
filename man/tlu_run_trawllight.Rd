@@ -4,10 +4,12 @@
 \alias{tlu_run_trawllight}
 \title{Wrapper function to run trawllight}
 \usage{
-tlu_run_trawllight(rm.temp = TRUE)
+tlu_run_trawllight(rm.temp = TRUE, survey)
 }
 \arguments{
 \item{rm.temp}{Should temporary files produced during data processing be removed?}
+
+\item{survey}{Survey region "BS", "NBS", "GOA", "AI", or "SLOPE".}
 }
 \description{
 Runs all of the trawllight functions in order to produces data products from upcast, downcast, and surface data.
