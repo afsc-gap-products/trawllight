@@ -1,44 +1,199 @@
-#' Copy MK9 data and setup directory
+#' Wrapper function for filter_stepwise and calculate_attenuation using RACE data structure.
+#'
+#' For use processing AOPs from AFSC/RACE/GAP data structure. This function is designed to work with the file structure of RACE light data to subset all of the Mk9 data obtained during upscasts and downcasts. process_all runs functions trawllight::convert_light, trawllight::filter_stepwise, and trawllight::calculate_attenuation on the data.
 #' 
-#' Setup directory and retrieve data for processing MK9 data.
-#' 
-#' @param channel Oracle connection as an RODBC connection object.
-#' @param survey RACE survey code as a character vector.
-#' @param light_data_root Filepath to the data source
-#' @export
+#' @param dir.structure Vector of file paths to directories containing corr_MK9hauls.csv and CastTimes.csv files.
+#' @param time.buffer Buffer around upcast_start and downcast_start
+#' @param cast.dir Cast direction, either 'Downcast' or 'Upcast'
+#' @param agg.fun Function to use to calculate light for a depth bin (Default = median)
+#' @param binsize Bin width for depth bins
+#' @param bin.gap Maximum gap in depth bins for a cast to still be considered 'good'
+#' @param kz.binsize Bin size for interpolation
+#' @noRd
 
-tlu_setup_dir <- function(channel = NULL, survey, light_data_root = "G:/RACE_LIGHT/LightData/Data") {
+tlu_process_all <- function(dir.structure,
+                            time.buffer = 20,
+                            cast.dir = "downcast",
+                            agg.fun = median,
+                            binsize = 2,
+                            bin.gap = 6,
+                            kz.binsize = 0.5,
+                            silent = TRUE,
+                            ...) {
   
-  if(!(survey %in% c("BS", "NBS", "GOA", "AI"))) {
-    stop(paste0("survey selection, ", survey, " invalid. Must be 'BS', 'NBS', 'GOA', or 'AI'."))
-  }
-
-  channel <- mk9process::get_connected(channel = channel)
+  # Initialize
+  loess_eval <- 1
   
-  if(!dir.exists(here::here("data"))) {
-    dir.create(here::here("data"))
-  } else {
-    warning(paste0("'data' directory already exists and was not overwritten."))
-  }
+  # Loops over directory structure ----
+  for(i in 1:length(dir.structure)) {
     
-  if(!dir.exists(here::here("output"))) {
-    dir.create(here::here("output"))
-  } else {
-    warning(paste0("'output' directory already exists and was not overwritten."))
+    if(file.exists(paste(dir.structure[i], "/corr_MK9hauls.csv", sep = "")) &
+       file.exists(paste(dir.structure[i], "/CastTimes.csv", sep = ""))) {
+      
+      corr_mk9hauls <- read.csv(paste(dir.structure[i], "/corr_MK9hauls.csv", sep = ""))
+      casttimes <- read.csv(paste(dir.structure[i], "/CastTimes.csv", sep = ""))
+      
+      corr_mk9hauls$ctime <- as.POSIXct(strptime(corr_mk9hauls$ctime, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+      casttimes$downcast_start <- as.POSIXct(strptime(casttimes$downcast_start, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) - time.buffer
+      casttimes$downcast_end <- as.POSIXct(strptime(casttimes$downcast_end, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) + time.buffer
+      casttimes$upcast_start <- as.POSIXct(strptime(casttimes$upcast_start, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) - time.buffer
+      casttimes$upcast_end <- as.POSIXct(strptime(casttimes$upcast_end, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) + time.buffer
+      
+      for(j in 1:nrow(casttimes)) {
+        if(!silent) {
+          print(paste("Cruise: ", casttimes$cruise[j], ", Vessel: ", casttimes$vessel[j], ", Haul: ", casttimes$haul[j], sep = ""))
+        }
+        vert <- trawllight:::tlu_vertical_profiles(light.data = corr_mk9hauls,
+                                                  cast.data = subset(casttimes, haul == casttimes$haul[j]))
+        
+        vert <- subset(vert, updown == cast.dir)
+        
+        if(nrow(vert) > 0) {
+          vert$trans_llight <- trawllight::convert_light(vert$llight, ...)
+          
+          filtered <- trawllight::filter_stepwise(cast.data = vert,
+                                                  light.col = "trans_llight",
+                                                  depth.col = "cdepth",
+                                                  bin.size = binsize,
+                                                  bin.gap = bin.gap,
+                                                  agg.fun = agg.fun,
+                                                  ...)
+          atten.out <- trawllight::calculate_attenuation(filtered, light.col = "trans_llight", depth.col = "cdepth", kz.binsize = kz.binsize)
+          
+          if(!is.null(atten.out)) {
+            atten.out$attenuation$vessel <- vert$vessel[1]
+            atten.out$attenuation$cruise <- vert$cruise[1]
+            atten.out$attenuation$haul <- vert$haul[1]
+            atten.out$attenuation$quality <- vert$quality[1]
+            
+            atten.out$fit_atten$vessel <- vert$vessel[1]
+            atten.out$fit_atten$cruise <- vert$cruise[1]
+            atten.out$fit_atten$haul <- vert$haul[1]
+            
+            atten.out$fit_residuals$vessel <- vert$vessel[1]
+            atten.out$fit_residuals$cruise <- vert$cruise[1]
+            atten.out$fit_residuals$haul <- vert$haul[1]
+            
+          }
+          
+          lr.out <- trawllight:::light_proportion(filtered)
+          
+          if(cast.dir == "upcast") {
+            lr.out$surface_time <- casttimes$upcast_end[j]
+          } else if(cast.dir == "downcast") {
+            lr.out$surface_time <- casttimes$downcast_start[j]
+          }
+          
+          if(class(loess_eval) == "numeric") {
+            loess_eval <- atten.out$fit_atten
+            atten_values <- atten.out$attenuation
+            resid_fit <- atten.out$fit_residuals
+            light_ratios <- lr.out
+          } else {
+            loess_eval <- plyr::rbind.fill(loess_eval, atten.out$fit_atten)
+            resid_fit <- plyr::rbind.fill(resid_fit, atten.out$fit_residuals)
+            atten_values <- plyr::rbind.fill(atten_values, atten.out$attenuation)
+            light_ratios <- plyr::rbind.fill(light_ratios, lr.out)
+          }
+        } else {
+          if(silent == F) {
+            print("No cast data found!")
+          }
+        }
+      }
+    } else {
+      print(paste("File(s) not found in directory ", dir.structure, ". Directory skipped."))
+    }
   }
+  return(list(loess_eval = loess_eval,
+              atten_values = atten_values,
+              light_ratios = light_ratios,
+              resid_fit = resid_fit))
+}
+
+#' Loop surface_light
+#'
+#' Calculate surface light for upcasts and downcasts.
+#'
+#' @param dir.structure A character vector containing filepaths for all of the directories containing light measurements from surface/deck archival tags.
+#' @param adjust.time Should trawllight::tlu_time_adjustments function be used to adjust surface times to match survey time.
+#' @param ... Additional arguments to be passed to surface_light or time_adjustments
+#' @noRd
+
+tlu_process_all_surface <- function(dir.structure, adjust.time = T, ...) {
   
-  if(!dir.exists(here::here("imports"))) {
-    dir.create(here::here("imports"))
-  } else {
-    warning(paste0("'imports' directory already exists and was not overwritten."))
+  surface.output <- NULL
+  
+  for(t in 1:length(dir.structure)) {
+    
+    # Check for CastTimes
+    if(!file.exists(paste(dir.structure[t], "/CastTimes.csv", sep = ""))) {
+      stop(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.structure[t])))
+    }
+    
+    # Import CastTImes
+    print(paste("Processing", dir.structure[t]))
+    cast.times <- read.csv(paste(dir.structure[t], "/CastTimes.csv", sep = ""))
+    
+    # Find names of deck files
+    deck.files <- list.files(path = dir.structure[t], pattern = "^deck.*\\.csv", full.names = T)
+    
+    # Check for CastTimes
+    if(length(deck.files) < 1) {
+      warning(paste("process_all_surface: Deck light measurements not found in" , paste(dir.structure[t])))
+    } else {
+      
+      
+      
+      #Import first deck file
+      deck.data <- read.csv(file = deck.files[1], header = F, skip = 3)
+      deck.data$ctime <- paste(deck.data[,1], deck.data[,2], sep = " ")
+      
+      # Import additional deck files if multiple exist in one directory
+      if(length(deck.files) > 1) {
+        for(b in 2:length(deck.files)) {
+          deck.data <- rbind(deck.data, read.csv(file = deck.files[b], header = F, skip = 3))
+        }
+      }
+      
+      # Convert times into POSIXct
+      deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
+      
+      # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
+      cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
+                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+      cast.times$downcast_end <- as.POSIXct(strptime(cast.times$downcast_end,
+                                                     format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+      cast.times$upcast_start <- as.POSIXct(strptime(cast.times$upcast_start,
+                                                     format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+      cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
+                                                   format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+      
+      if(adjust.time) {
+        # Correct cases where there is a mismatch between survey time and tag time
+        deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
+                                                       cast.data = cast.times)
+      }
+      if(nrow(deck.data) > 0) {
+        
+        # Find surface measurements
+        surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
+                                                           cast.data = cast.times,
+                                                           ...)
+        if(is.null(surface.output)) {
+          
+          surface.output <- surface_profiles
+          
+        } else {
+          if(!is.null(surface_profiles)) {
+            surface.output <- rbind(surface.output, surface_profiles)
+          }
+          
+        }
+      }
+    }
   }
-  
-  trawllight::tlu_prep_haul_data(channel = channel,
-                     survey = survey)
-  
-  trawllight::tlu_prep_dir_list(survey = survey,
-                                light_data_root = light_data_root)
-  
+  return(surface.output)
 }
 
 #' Get haul data and write to RDS
@@ -47,7 +202,7 @@ tlu_setup_dir <- function(channel = NULL, survey, light_data_root = "G:/RACE_LIG
 #' 
 #' @param channel Oracle connection as an RODBC connection object.
 #' @param survey RACE survey code as a character vector.
-#' @export
+#' @noRd
 
 tlu_prep_haul_data <- function(channel = NULL, 
                                survey) {
@@ -72,7 +227,7 @@ tlu_prep_haul_data <- function(channel = NULL,
 #' 
 #' @param survey RACE survey code as a character vector.
 #' @param light_data_root Root directory for light data as a character vector.
-#' @export
+#' @noRd
 
 tlu_prep_dir_list <- function(survey, 
                               light_data_root = "G:/RACE_LIGHT/LightData/Data") {
@@ -106,227 +261,84 @@ tlu_prep_dir_list <- function(survey,
             row.names = FALSE)
 }
 
-
-#' Wrapper function to retrieve cast data and aggregate
+#' Subsets light measurements from upcasts/downcasts
+#'
+#' Assigns light measurements to upcast or downcast based on downcast start time and downcast end time.
 #' 
-#' Description goes here... writes binned cast data to an rds file after interpolating missing surface values.
-#' 
-#' @param directory_structure File path to csv file that lists directories to be processed.
-#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE".
-#' @param cast.dir Cast direction, either "upcast" or "downcast"
-#' @param time.buffer Time buffer in seconds to add/subtract from upcast and downcast times. Default = 20
-#' @param bin.size Passed to trawllight::filter_stepwise. Depth bin size for aggregating light measurements.  Default = 2
-#' @param bin.gap Passed to trawllight::filter_stepwise. Maximum allowable gap in observations before a profile is considered to not meet continuity standards. Default = 6 (i.e., three bins if bin.size = 2)
-#' @param agg.fun Function used to calculate summary statistic for a depth bin. Default = geometric.mean
-#' @param silent Passed to... 
-#' @param ... Optional arguments passed to filter_stepwise or calculate_attenuation.
-#' @export
+#' @param light.data Data frame with light data
+#' @param cast.data Data frame containing case data.
+#' @noRd
 
-tlu_get_casts <- function(directory_structure,
-                      survey,
-                      cast.dir = "downcast",
-                      time.buffer = 20,
-                      bin.size = 2,
-                      bin.gap = 6,
-                      agg.fun = geometric.mean,
-                      silent = TRUE,
-                      ...) {
+tlu_vertical_profiles <- function(light.data, cast.data) {
   
-  cast.dir <- tolower(cast.dir)
-  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
-  out_path <- here::here("output", paste0(region_light, "_", cast.dir, ".rds"))
+  # Remove surface data
+  light.data <- subset(light.data, cdepth >= 0)
   
+  # Create empty columns for cast direction (updown) and haul number
+  light.data$updown <- rep(NA, nrow(light.data))
+  light.data$haul <- rep(NA, nrow(light.data))
   
-  # Batch load rds
-  .combine_rds_df <- function(sel_dir = here::here("output"), 
-                             pattern,
-                             n_batch = 5) {
-    
-    sel_files <- list.files(sel_dir, 
-                            pattern = pattern,
-                            full.names = TRUE)
-    dat_out <- data.frame()
-    int_index <- 1
-    kk_iter <- length(sel_files)
-    
-    for(kk in 1:kk_iter) {
-      dat_in <- try(readRDS(sel_files[kk]), silent = TRUE)
-      
-      if(class(dat_in) != "try-error") {
-        dat_out <- dplyr::bind_rows(dat_out, dat_in)
-      }
-      
-      if(kk == n_batch || kk == kk_iter) {
-        assign(x = paste0(pattern, "_", int_index), value = dat_out)
-        dat_out <- data.frame()
-        int_index <- int_index + 1
-      }
-    }
-    
-    return(do.call(dplyr::bind_rows, 
-                   mget(objects(pattern = pattern))))
-    
-  }
-
-  for(jj in 1:nrow(directory_structure)) {
-    
-    # Condition in case processing stops in the middle due to missing files in source path
-    if(!file.exists(here::here("output", paste0("temp_resid_", jj, ".rds")))) {
-      
-      cast_dat <- trawllight::tlu_process_all(
-        dir.structure = directory_structure[jj,],
-        cast.dir = cast.dir,
-        time.buffer = time.buffer,
-        silent = silent,
-        binsize = bin.size,
-        bin.gap = bin.gap,
-        agg.fun = agg.fun)
-      
-      saveRDS(cast_dat$light_ratios, file = here::here("output", paste0("temp_od_", jj, ".rds")))
-      saveRDS(cast_dat$atten_values, file = here::here("output", paste0("temp_kd_", jj, ".rds")))
-      saveRDS(cast_dat$loess_eval, file = here::here("output", paste0("temp_loess_", jj, ".rds")))
-      saveRDS(cast_dat$resid_fit, file = here::here("output", paste0("temp_resid_", jj, ".rds")))
-    }
-    
-  }
+  # Assign upcast or downcast to times
+  light.data$updown[light.data$ctime > cast.data$downcast_start & light.data$ctime < cast.data$downcast_end[1]] <- "downcast"
+  light.data$updown[light.data$ctime > cast.data$upcast_start & light.data$ctime < cast.data$upcast_end[1]] <- "upcast"
+  light.data$haul[light.data$ctime > cast.data$downcast_start & light.data$ctime < cast.data$upcast_end[1]] <- cast.data$haul[1]
   
-  print("tlu_get_casts: combining temp rds files from output")
-  out_list <- list(light_ratios = .combine_rds_df(pattern = "temp_od", n_batch = 5),
-                   atten_values = .combine_rds_df(pattern = "temp_kd", n_batch = 5),
-                   loess_eval = .combine_rds_df(pattern = "temp_loess", n_batch = 5),
-                   resid_fit = .combine_rds_df(pattern = "temp_resid", n_batch = 5))
-  
-  print(paste0("tlu_get_casts: writing output to ",  out_path))
-  saveRDS(out_list, file = out_path)
-  
-  print("tlu_get_casts: removing temporary rds files from output")
-  file.remove(list.files(here::here("output"), pattern = "temp", full.names = TRUE))
-  
+  # Remove on-bottom and errant sampling not from casts
+  light.data <- subset(light.data, is.na(updown) == F)
+  return(light.data)
 }
 
 
-#' Wrapper function to retrieve cast data and aggregate
-#' 
-#' Description goes here... writes binned cast data to an rds file after interpolating missing surface values.
-#' 
-#' @param directory_structure File path to csv file that lists directories to be processed.
-#' @param survey Survey as a character vector ("BS", "NBS", "GOA", "AI", or "SLOPE") 
-#' @export
+#' Find surface light measurements during casts
+#'
+#' For use processing AOPs from AFSC/RACE/GAP data structure. Uses cast start and end times to find concurrent measurements obtained by the deck-mounted archival tag, including a buffer. The buffer is added around the start and end times, so a 30 second buffer = one minute.
+#'
+#' @param light.data Light measurements from the surface/deck archival tag.
+#' @param cast.data Haul event times indicating the start and end times for net deployment and retrieval.
+#' @param time.buffer Time buffer before and after the start of the cast.
+#' @param agg.fun Function applied to calculate central tendency metric for light measurements sampled during the cast time window. Default trawllight::geometric.mean
+#' @param ... Additional arguments passed to trawllight::convert_light()
+#' @noRd
 
-tlu_get_surface <- function(directory_structure, 
-                            survey,
-                            ...) {
+tlu_surface_light <- function(light.data, cast.data, time.buffer = 30, agg.fun = trawllight::geometric.mean, ...) {
   
-  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
-  out_path <- here::here("output", paste0(region_light, "_surface", ".rds"))
+  # Select and rename light and time columns
+  if(ncol(light.data) >= 6) {
+    light.data <- light.data[,5:6]
+  } else {
+    warning(paste("surface_light: Deck light measurements not found for" , cast.data$vessel[1], "-", cast.data$cruise[1]))
+    return(NULL)
+  }
   
-  surf <- trawllight::tlu_process_all_surface(dir.structure = directory_structure[,1], ...)
-
-  saveRDS(surf, file = out_path)
-  return(surf)
+  colnames(light.data) <- c("surf_llight", "ctime")
+  light.data$surf_trans_llight <- trawllight::convert_light(light.data$surf_llight, ...)
+  light.data$vessel <- rep(cast.data$vessel[1], nrow(light.data))
+  light.data$cruise <- rep(cast.data$cruise[1], nrow(light.data))
+  
+  for(i in 1:nrow(cast.data)) {
+    # Assign upcast or downcast to tag time
+    light.data$updown[light.data$ctime > (cast.data$downcast_start[i] - time.buffer) &
+                        light.data$ctime < (cast.data$downcast_start[i] + time.buffer)] <- "downcast"
+    light.data$updown[light.data$ctime > (cast.data$upcast_start[i] - time.buffer) &
+                        light.data$ctime < (cast.data$upcast_end[i] + time.buffer)] <- "upcast"
+    light.data$haul[light.data$ctime > (cast.data$downcast_start[i] - time.buffer) &
+                      light.data$ctime < (cast.data$upcast_end[i] + time.buffer)] <- cast.data$haul[i]
+  }
+  
+  # Remove measurements outside of time window
+  light.data <- subset(light.data, !is.na(updown))
+  
+  llight <- aggregate(surf_trans_llight ~ haul + updown + vessel + cruise, data = light.data, FUN = agg.fun)
+  
+  ctime <- aggregate(ctime ~ haul + updown + vessel + cruise, data = light.data, FUN = mean)
+  
+  ctime$ctime <- lubridate::with_tz(ctime$ctime, "America/Anchorage")
+  light.data <- dplyr::inner_join(llight, ctime, by = c("haul", "updown", "vessel", "cruise"))
+  
+  return(light.data)
 }
 
-#' Wrapper function to run trawllight
-#' 
-#' Runs all of the trawllight functions in order to produces data products from upcast, downcast, and surface data.
-#' 
-#' @param rm.temp Should temporary files produced during data processing be removed?
-#' @export
 
-tlu_run_trawllight <- function(rm.temp = TRUE) {
-  
-  
-  if(!file.exists(here::here("output", "temp_combined_huds.rds"))) {
-    print("Combining haul, upcast, downcast, and surface (HUDS) data and writing to output/combined_huds.rds.")
-    trawllight::tlu_combine_casts() |>
-      saveRDS( here::here("output", "temp_combined_huds.rds"))
-  }
-  
-  
-  
-  if(!file.exists(here::here("output", "temp_tag_residuals.rds"))) {
-    print("Calculate residuals that are used for flagging archival tag orientation errors.")
-    trawllight::tlu_calc_resids(input = 
-                                  readRDS(here::here("output", "temp_combined_huds.rds"))) |>
-      trawllight::tlu_flag_orientation(direct.threshold = "auto",
-                                       indirect.threshold = "auto",
-                                       direct.col = "surf_ratio",
-                                       indirect.col = "indirect_residual") |>
-      saveRDS(file = here::here("output", "temp_tag_residuals.rds"))
-  }
-  
-  if(!file.exists(here::here("output", "temp_interp_huds.rds"))) {
-    print("Estimating irradiance when missing/omitted from reference depth bin.")
-    trawllight::tlu_cast_wrapper(
-      x = readRDS(here::here("output", "temp_combined_huds.rds")),
-      id.col = c(
-        "vessel",
-        "cruise",
-        "haul",
-        "updown",
-        "quality",
-        "k_column",
-        "surf_trans_llight",
-        "haul_type",
-        "stationid",
-        "bottom_depth",
-        "orientation"
-      ), silent = TRUE, FUN = "estimate_surface"
-    ) |> 
-      saveRDS(here::here("output", "temp_interp_huds.rds"))
-  }
-  
-  if(!file.exists(here::here("output", "temp_filtered_huds.rds"))) {
-    print("Combining residual and interpolated HUDS, seting QA/QC flags, and recalculating optical depth for interpolated data.")
-    readRDS(here::here("output", "temp_tag_residuals.rds")) |>
-      trawllight::tlu_use_casts() |> 
-      merge(readRDS(here::here("output", "temp_interp_huds.rds"))) |>
-      trawllight::tlu_use_casts2() |>
-      cast_wrapper(id.col = c("vessel", "cruise", "haul", "updown"),
-                   FUN = light_proportion) |>
-      dplyr::mutate(optical_depth = log(1) - log(light_ratio)) |>
-      saveRDS(here::here("output", "temp_filtered_huds.rds"))
-  }
-  
-  print("Summarizing near bottom optical depth and writing to output/final_nbod.rds")
-  aggregate(data = dplyr::select(
-    readRDS(here::here("output", "temp_filtered_huds.rds")),
-    vessel,
-    cruise,
-    haul,
-    updown,
-    bottom_depth,
-    cdepth,
-    latitude,
-    longitude,
-    stationid),
-    cdepth ~ bottom_depth + vessel + cruise + haul + updown + latitude + longitude + stationid,
-    FUN = max) |>
-    dplyr::inner_join(readRDS(here::here("output", "temp_filtered_huds.rds"))) |>
-    dplyr::rename(near_bottom_optical_depth = optical_depth) |>
-    dplyr::select(-downcast, -upcast, - k_linear, -k_column, -light_ratio) |>
-    saveRDS(here::here("output", "final_nbod.rds"))
-  
-  print("Finding attenuation profiles from casts that passed QA/QC and writing to output/final_atten.rds")
-  tlu_find_atten_profiles(
-    downcasts = readRDS(list.files("output", pattern = "downcast", full.names = TRUE))$atten_values,
-    upcasts =  readRDS(list.files("output", pattern = "upcast", full.names = TRUE))$atten_values,
-    keep = unique(dplyr::select(
-      readRDS(here::here("output", "final_nbod.rds")),
-      vessel,
-      cruise,
-      haul,
-      updown,
-      latitude,
-      longitude))) |>
-    saveRDS(here::here("output", "final_atten.rds"))
-  
-  if(rm.temp) {
-    print("Removing temporary files.")
-    file.remove(list.files(path = here::here("output"), pattern = "temp", full.names = TRUE))
-  }
-  
-}
 
 #' Correct tag time in cases where offsets were incorrect
 #'
@@ -334,7 +346,8 @@ tlu_run_trawllight <- function(rm.temp = TRUE) {
 #' 
 #' @param light.data Data frame with light data
 #' @param cast.data Data frame containing case data.
-#' @export
+#' @keywords internal
+#' @noRd
 
 tlu_time_adjustments <- function(light.data, cast.data) {
   # Add vessel/cruise combination corrections for processing.
@@ -375,7 +388,7 @@ tlu_time_adjustments <- function(light.data, cast.data) {
 #' @param surface Surface light data as a data frame. Default NULL searches for surface data in the output directory.
 #' @param downcasts Downcast data as a list that includes the light_data data frame. Default NULL searches for downcast data in the output directory.
 #' @param upcasts Upcast data as a list that includes the light_Data data frame. Default NULL searaches for upcast data in the output directory.
-#' @export
+#' @noRd
 
 tlu_combine_casts <- function(haul.dat = NULL,
                               surface = NULL,
@@ -450,7 +463,7 @@ tlu_combine_casts <- function(haul.dat = NULL,
 #' @param input Input data, i.e., the data frame output by trawllight::tlu_combine_casts()
 #' @param depth.bins Depth bins to use for calculating residuals. Default c(1,3,5) described by Rohan et al. (2020) and Rohan et al. (2021).
 #' @param write.rds If TRUE, saves output to output/tag_residuals.rds
-#' @export
+#' @noRd
 
 tlu_calc_resids <- function(input, 
                             depth.bins = c(1, 3, 5),
@@ -504,7 +517,7 @@ tlu_calc_resids <- function(input,
 #' @param min.rows Minimum number of rows necessary for the function to run
 #' @param silent Should id variables be printed to console.
 #' @param ... Optional arguments passed to FUN.
-#' @export
+#' @noRd
 
 tlu_cast_wrapper <- function(x, id.col, FUN, min.rows = 4, silent = TRUE, ...) {
   
@@ -553,7 +566,7 @@ tlu_cast_wrapper <- function(x, id.col, FUN, min.rows = 4, silent = TRUE, ...) {
 #' @param indirect.threshold Threshold for indirect method residual error assignment as a numeric vector or ("auto") to use the method described in Rohan et al. (2020, 2021)
 #' @param direct.col Name of direct residual column. Default = "direct_residual"
 #' @param indirect.col Name of indirect residual column. Default = "indirect_residual"
-#' @export
+#' @noRd
 
 tlu_flag_orientation <- function(resids,
                              direct.threshold  = "auto",
@@ -635,7 +648,7 @@ tlu_flag_orientation <- function(resids,
 #' Combine orientation and quality for upcasts and downcasts
 #' 
 #' @param input Input data frame
-#' @export
+#' @noRd
 
 tlu_use_casts <- function(input) {
   qq <-
@@ -657,7 +670,7 @@ tlu_use_casts <- function(input) {
 #' Omit casts where estimated near-surface light exceeds maximum observed
 #' 
 #' @param input Input data frame
-#' @export
+#' @noRd
 
 tlu_use_casts2 <- function(input) {
   input <-
@@ -676,7 +689,7 @@ tlu_use_casts2 <- function(input) {
 #' @param downcasts Data frame containing downcast attenuation profiles
 #' @param upcasts Data frame containing upcast attenuation profiles
 #' @param keep Data frame with QA/QC flags
-#' @export
+#' @noRd
 
 tlu_find_atten_profiles <- function(downcasts, upcasts, keep) {
   downcasts$updown <- "downcast"
@@ -684,4 +697,33 @@ tlu_find_atten_profiles <- function(downcasts, upcasts, keep) {
   bbb <- rbind(downcasts, upcasts)
   bbb <- merge(bbb, keep)
   return(bbb)
+}
+
+
+#' Calculate relative light level and linear attenuation coefficient
+#'
+#' \code{light_proportion} calculates the proportion of light and the linear attenuation coefficient for each depth bin, relative to the highest observed light level for a cast.
+#'
+#' @param x A data frame which contains light and depth measurements.
+#' @param light.col Name of the column containing light measurements.
+#' @param depth.col Name of the column containing depth measurements.
+#' @return Returns a data frame containing input values, the proportion of light relative to the highest observed light measurement as \code{light_ratio}, and the attenuation coefficient of diffuse downwelling irradiance relative to the highest observed light measurement as \code{k_linear}.
+#' @keywords internal
+#' @export
+
+light_proportion <- function(x, light.col = "trans_llight", depth.col = "cdepth", ...) {
+  
+  names(x)[names(x) == light.col] <- "trans_llight"
+  names(x)[names(x) == depth.col] <-  "cdepth"
+  # Light ratio relative to shallowest bin.
+  x$light_ratio <- x$trans_llight / max(x$trans_llight, na.rm = T)
+  
+  # Linear attenuation coefficient relative to shallowest bin.
+  x$k_linear <- log(x$trans_llight/max(x$trans_llight)) / (min(x$cdepth) - x$cdepth)
+  
+  # Whole column attenuation coefficient.
+  x$k_column <- rep((log(min(x$trans_llight)/max(x$trans_llight))) / (min(x$cdepth) - max(x$cdepth)), nrow(x))
+  names(x)[names(x) == "trans_llight"] <- light.col
+  names(x)[names(x) == "cdepth"] <-  depth.col
+  return(x)
 }
