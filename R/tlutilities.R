@@ -727,3 +727,82 @@ light_proportion <- function(x, light.col = "trans_llight", depth.col = "cdepth"
   names(x)[names(x) == "cdepth"] <-  depth.col
   return(x)
 }
+
+#' Write AOPs
+#' 
+#' Calculate cast-level variables (near-bottom optical depth, Z10, Z1) from filtered and interpolated data and write data output/final_stn_vars.rds; and write profile variables (Kd(Z)) that pass QA/QC checks to output/final_profile_vars.rds.
+#' 
+#'  @param survey Survey region "BS", "NBS", "GOA", "AI", or "SLOPE".
+#'  @noRd 
+
+tlu_calc_summary <- function(survey) {
+  
+  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
+  
+  print("tlu_calc_summary: Summarizing near bottom optical depth and writing to output/final_nbod.rds")
+  aggregate(data = dplyr::select(
+    readRDS(here::here("output", paste0("temp_", region_light, "_filtered_huds.rds"))),
+    vessel,
+    cruise,
+    haul,
+    updown,
+    bottom_depth,
+    cdepth,
+    latitude,
+    longitude,
+    stationid),
+    cdepth ~ bottom_depth + vessel + cruise + haul + updown + latitude + longitude + stationid,
+    FUN = max) |>
+    dplyr::inner_join(readRDS(here::here("output", paste0("temp_", region_light, "_filtered_huds.rds")))) |>
+    dplyr::rename(near_bottom_optical_depth = optical_depth) |>
+    dplyr::select(-downcast, -upcast, - k_linear, -k_column, -light_ratio) |>
+    saveRDS(here::here("output", paste0("temp_", region_light, "_nbod.rds")))
+  
+  print("tlu_calc_summary: Finding attenuation profiles from casts that passed QA/QC and writing to output/final_profile_vars.rds")
+  trawllight:::tlu_find_atten_profiles(
+    downcasts = readRDS(list.files("output", pattern = paste0(region_light, "_downcast"), full.names = TRUE))$atten_values,
+    upcasts =  readRDS(list.files("output", pattern = paste0(region_light, "_upcast"), full.names = TRUE))$atten_values,
+    keep = unique(dplyr::select(
+      readRDS(here::here("output", paste0("temp_", region_light, "_nbod.rds"))),
+      vessel,
+      cruise,
+      haul,
+      updown,
+      latitude,
+      longitude))) |>
+    saveRDS(here::here("output", paste0(region_light, "_final_profile_vars.rds")))
+  
+  od_df <- readRDS(list.files(here::here("output"), pattern = paste0("temp_", region_light, "_filtered_huds"), full.names = TRUE))
+  
+  print("tlu_calc_summary: Estimating z[10]")  
+  Z10_df <- trawllight::cast_wrapper(
+    x = od_df,
+    id.col = c("vessel", "cruise", "haul", "updown"),
+    FUN = trawllight::find_optical_depth,
+    with.input = TRUE,
+    return.col = "Z10",
+    target.od = -1 * log(0.1)) |>
+    dplyr::select(vessel, cruise, haul, updown, latitude, longitude, haul_type, bottom_depth, Z10) |>
+    unique()
+  
+  print("tlu_calc_summary: Estimating z[1]")  
+  Z1_df <- trawllight:::cast_wrapper(
+    x = od_df,
+    id.col = c("vessel", "cruise", "haul", "updown"),
+    FUN = trawllight::find_optical_depth,
+    with.input = TRUE,
+    return.col = "Z1",
+    target.od = -1 * log(0.01)) |>
+    dplyr::select(vessel, cruise, haul, updown, latitude, longitude, haul_type, bottom_depth, Z1) |>
+    unique()
+  
+  print("tlu_calc_summary: Combining temp_nbod, z1, and z10")
+  dplyr::full_join(Z10_df, 
+                   Z1_df, 
+                   by = c("vessel", "cruise", "haul", "updown", "latitude", "longitude", "haul_type", "bottom_depth")) |>
+    dplyr::full_join(
+      readRDS(here::here("output", paste0("temp_", region_light, "_nbod.rds"))), 
+      by = c("vessel", "cruise", "haul", "updown", "latitude", "longitude", "haul_type", "bottom_depth")) |>
+    saveRDS(here::here("output", paste0(region_light, "_final_stn_vars.rds")))
+  
+}
