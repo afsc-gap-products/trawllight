@@ -4,6 +4,7 @@
 #' 
 #' @param directory_structure File path to csv file that lists directories to be processed.
 #' @param survey Survey as a character vector ("BS", "NBS", "GOA", "AI", or "SLOPE") 
+#' @param ... Additional arguments passed to tlu_surface_light
 #' @export
 
 tlu_get_surface <- function(directory_structure, 
