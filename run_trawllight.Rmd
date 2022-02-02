@@ -1,0 +1,77 @@
+---
+title: "Derive AOPs"
+author: "Sean Rohan"
+date: "2/2/2022"
+output: html_document
+---
+
+# Run QA/QC and derive apparent optical properties (AOPs)
+
+After irradiance data are time-synchronized to measurements from the temperature-depth recorder, the trawllight algorithm is used to derive apparent optical properties from irradiance data and run quality control/quality assurance checks. Methods for processing the data and QA/QC protocols are described in Rohan et al. (2020) and Rohan et al. (2021).
+
+The code in this document is used to run the trawllight algorithm from RACE's data structure, for one survey region at a time. Wrapper functions used to setup the data processing directory and run the trawllight algorithm are primarily internal trawllight functions.
+
+## 1. Setup directory
+
+Setup the directory for a survey region (options: "BS", "NBS", "GOA", "AI", "SLOPE") and retrieve haul data. Specify the root directory where irradiance data are stored (G:/RACE_LIGHT/LightData/Data). The root directory will be mapped to list locations where light data from vessel/year are stored imports/directories.csv.
+
+```{r setup, include=TRUE, eval=FALSE}
+survey <- "BS"
+
+trawllight::tlu_setup_dir(survey = "BS", 
+                          light_data_root = "G:/RACE_LIGHT/LightData/Data")
+```
+
+## 2. Retrieve upcast and downcast data, calculate K[d](z)
+
+The trawllight::tlu_get_casts function is used to retrieve upcast data *or* downcast data from trawl-mounted archival tags from  directories listed in imports/directories.csv, run the trawllight stepwise filter, and calculate the downwelling diffuse attenuation coefficient. The function should be run twice to retrieve all cast data from a region (once for "downcast" and once for "upcast").
+
+Function arguments specified (time.buffer=20, bin.size=2, bin.gap=6, agg.fun = trawllight::geometric.mean) are the settings used in Rohan et al. (2020) and Rohan et al. (2021).
+
+Outputs of the function are rds files in the output directory that contains binned light data and downwelling diffuse attenuation coefficient variables for every cast. 
+
+```{r getcasts, include=TRUE, eval=FALSE}
+trawllight::tlu_get_casts(
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:12,]),
+  survey = survey,
+  cast.dir = "downcast",
+  time.buffer = 20,
+  silent = TRUE,
+  bin.size = 2,
+  bin.gap = 6,
+  agg.fun = trawllight::geometric.mean)
+
+trawllight::tlu_get_casts(
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:12,]),
+  survey = survey,
+  cast.dir = "upcast",
+  time.buffer = 20,
+  silent = TRUE,
+  bin.size = 2,
+  bin.gap = 6,
+  agg.fun = trawllight::geometric.mean)
+```
+
+## 3. Retrieve light surface data
+
+The trawllight::tlu_get_surface function retrieves irradiance data from deck-mounted archival tags and calculates the average irradiance while the archival tag was near the surface during upcasts or downcasts. Surface light data are subsequently used to calculate residuals that are used to detect archival tag orientation errors.
+
+Function arguments below (time.buffer=30, agg.fun=trawllight::geometric.mean) are the settings used in Rohan et al. (2020) and Rohan et al. (2021) and are passed to trawllight:::tlu_surface_light()
+
+```{r getsurface, include=TRUE, eval=FALSE}
+trawllight::tlu_get_surface(
+  data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:12,]),
+  survey = survey, 
+  time.buffer = 30, 
+  agg.fun = trawllight::geometric.mean)
+```
+
+## 4. Apply QA/QC protocols
+
+The trawllight::tlu_run_trawllight() function runs trawllight QA/QC protocols. Outputs are the diffuse attenuation profile data in an and cast-level summary variables (near-bottom optical depth, Z10%, Z1%), which are saved as rds files () in the output directory.
+
+```{r runtrawllight, include=TRUE, eval=FALSE}
+trawllight::tlu_run_trawllight(rm.temp = TRUE, 
+                               survey = "BS")
+```
+
