@@ -13,7 +13,7 @@
 #' @param ... Optional arguments passed to filter_stepwise or calculate_attenuation.
 #' @export
 
-tlu_get_casts <- function(directory_structure,
+tlu_get_casts <- function(directory_structure = NULL,
                           survey,
                           cast.dir = "downcast",
                           time.buffer = 20,
@@ -27,6 +27,9 @@ tlu_get_casts <- function(directory_structure,
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   out_path <- here::here("output", paste0(region_light, "_", cast.dir, ".rds"))
   
+  if(is.null(directory_structure)) {
+    directory_structure <- read.csv(file = here::here("imports", "directories.csv"))
+  }
   
   # Batch load rds
   .combine_rds_df <- function(sel_dir = here::here("output"), 

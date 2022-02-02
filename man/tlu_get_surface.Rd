@@ -4,12 +4,14 @@
 \alias{tlu_get_surface}
 \title{Wrapper function to retrieve cast data and aggregate}
 \usage{
-tlu_get_surface(directory_structure, survey, ...)
+tlu_get_surface(directory_structure = NULL, survey, ...)
 }
 \arguments{
 \item{directory_structure}{File path to csv file that lists directories to be processed.}
 
 \item{survey}{Survey as a character vector ("BS", "NBS", "GOA", "AI", or "SLOPE")}
+
+\item{...}{Additional arguments passed to tlu_surface_light}
 }
 \description{
 Description goes here... writes binned cast data to an rds file after interpolating missing surface values.

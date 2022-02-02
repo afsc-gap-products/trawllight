@@ -5,7 +5,7 @@
 \title{Wrapper function to retrieve cast data and aggregate}
 \usage{
 tlu_get_casts(
-  directory_structure,
+  directory_structure = NULL,
   survey,
   cast.dir = "downcast",
   time.buffer = 20,

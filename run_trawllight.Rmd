@@ -1,5 +1,5 @@
 ---
-title: "Derive AOPs"
+title: "Calculate AOPs"
 author: "Sean Rohan"
 date: "2/2/2022"
 output: html_document
@@ -32,7 +32,7 @@ Outputs of the function are rds files in the output directory that contains binn
 
 ```{r getcasts, include=TRUE, eval=FALSE}
 trawllight::tlu_get_casts(
-  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:12,]),
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:32,]),
   survey = survey,
   cast.dir = "downcast",
   time.buffer = 20,
@@ -42,7 +42,7 @@ trawllight::tlu_get_casts(
   agg.fun = trawllight::geometric.mean)
 
 trawllight::tlu_get_casts(
-  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:12,]),
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:32,]),
   survey = survey,
   cast.dir = "upcast",
   time.buffer = 20,
@@ -60,7 +60,7 @@ Function arguments below (time.buffer=30, agg.fun=trawllight::geometric.mean) ar
 
 ```{r getsurface, include=TRUE, eval=FALSE}
 trawllight::tlu_get_surface(
-  data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:12,]),
+  data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:32,]),
   survey = survey, 
   time.buffer = 30, 
   agg.fun = trawllight::geometric.mean)
