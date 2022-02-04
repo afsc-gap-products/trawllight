@@ -10,14 +10,14 @@
 
 mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
   
 	# get BT and event data from Oracle
-	mbt <- mk9process:::mk9_get_mbt_data(survey = survey, 
+	mbt <- trawllight:::mk9_get_mbt_data(survey = survey, 
 	                                vessel = vessel, 
 	                                cruise = cruise, 
 	                                channel = channel)
-	sgt <- mk9process:::mk9_get_sgt_data(survey = survey, 
+	sgt <- trawllight:::mk9_get_sgt_data(survey = survey, 
 	                                vessel = vessel, 
 	                                cruise = cruise, 
 	                                channel = channel)
@@ -91,7 +91,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	# creates haul list from event files where there is an On Bottom event
 	haullist <- sgt$haul[which(sgt$time_flag == 3)]
 	
-	light <- mk9process:::mk9_find_offset(light = light, 
+	light <- trawllight:::mk9_find_offset(light = light, 
 	                                     mbt = mbt, 
 	                                     try.offsets = seq(-8,8,0.5), 
 	                                     results.file = paste0(light.loc, "/offset_step1_log.txt"))

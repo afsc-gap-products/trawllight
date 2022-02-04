@@ -10,7 +10,7 @@
 
 mk9_extinction <- function(channel, survey, vessel, cruise){
   
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
 
 	## establish region names and light data location
 	survey.names <- as.data.frame(cbind(cap_name = c("AI","BS","GOA","SLOPE","NBS"), 
@@ -21,23 +21,23 @@ mk9_extinction <- function(channel, survey, vessel, cruise){
 	# extinct.loc <- "G:\\RACE_LIGHT\\LightData\\Data\\ExtinctionCoefficients\\"
 
 	## get data
-	hauls = mk9process:::mk9_get_haul_list(survey = survey ,
+	hauls = trawllight:::mk9_get_haul_list(survey = survey ,
 	                      vessel = vessel, 
 	                      cruise = cruise, 
 	                      channel = channel)
 	casts <- read.csv(file = paste(light.loc, "/CastTimes.csv", sep = ""), header = T)
 	perf <- read.csv(file = paste(light.loc, "/MK9.performance.csv", sep = ""), header = T)
-	sgt <- mk9process:::mk9_get_sgt_data(survey = survey ,
+	sgt <- trawllight:::mk9_get_sgt_data(survey = survey ,
 	                    vessel = vessel, 
 	                    cruise = cruise, 
 	                    channel = channel)
-	mbt <- mk9process:::mk9_get_mbt_data(survey = survey, 
+	mbt <- trawllight:::mk9_get_mbt_data(survey = survey, 
 	                                     vessel = vessel, 
 	                                     cruise = cruise, 
 	                                     channel = channel)
 	
 	## getting values from regression to correct light meter times
-	coef <- mk9process:::mk9_get_regr(survey = survey ,
+	coef <- trawllight:::mk9_get_regr(survey = survey ,
 	                 vessel = vessel, 
 	                 cruise = cruise, 
 	                 channel = channel)
@@ -107,7 +107,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise){
 		  stop(paste0("extinction: Unexpected number of columns, (", ncol(light), ") in light data csv. Expected 6 or 7."))
 	}
 	
-	light <- mk9process:::mk9_find_offset(light = light, 
+	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 
 	                                      try.offsets = seq(-8,8,0.5), 
 	                                      results.file = paste0(light.loc, "/offset_step1_log.txt"))

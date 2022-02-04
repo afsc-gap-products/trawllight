@@ -11,7 +11,7 @@
 
 mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 
-	channel <- mk9process:::get_connected(channel = channel)
+	channel <- trawllight:::get_connected(channel = channel)
 
 	## cruise year
 	year = floor(cruise/100)
@@ -21,23 +21,23 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 	## RACE data (either in RACEEDIT or RACEDATA)
 	print("getting supporting data...")
 
-	mbt = mk9process:::mk9_get_mbt_data(survey  = survey, 
+	mbt = trawllight:::mk9_get_mbt_data(survey  = survey, 
 	                   vessel = vessel, 
 	                   cruise = cruise, 
 	                   channel = channel)
 	
-	sgt = mk9process:::mk9_get_sgt_data(survey  = survey, 
+	sgt = trawllight:::mk9_get_sgt_data(survey  = survey, 
 	                   vessel = vessel, 
 	                   cruise = cruise, 
 	                   channel = channel)
 
-	hauls = mk9process:::mk9_get_haul_list(survey = survey, 
+	hauls = trawllight:::mk9_get_haul_list(survey = survey, 
 	                      vessel = vessel, 
 	                      cruise = cruise, 
 	                      channel = channel)
 	
 	## getting values from regression to correct light meter times
-	coef <- mk9process:::mk9_get_regr(survey = survey, 
+	coef <- trawllight:::mk9_get_regr(survey = survey, 
 	                             vessel = vessel, 
 	                             cruise = cruise, 
 	                             channel = channel)
@@ -135,7 +135,7 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 		df.names <- names(light.df)
 	}
 	
-	light <- mk9process:::mk9_find_offset(light = light, 
+	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 
 	                                      try.offsets = seq(-8,8,0.5), 
 	                                      results.file = paste0(light.loc, "/offset_step1_log.txt"))

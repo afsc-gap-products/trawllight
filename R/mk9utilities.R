@@ -93,7 +93,7 @@ mk9_get_haul_list <- function(channel = NA, survey, vessel, cruise){
   
   # load library if not supplied in function call above
   
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
   
   ## cruise year
   year = floor(cruise/100)
@@ -128,7 +128,7 @@ mk9_get_haul_list <- function(channel = NA, survey, vessel, cruise){
 
 mk9_get_mbt_data <- function(survey, vessel, cruise, channel = NULL){
   
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
   survey <- toupper(survey)
   
   ## cruise year
@@ -200,7 +200,7 @@ mk9_get_mbt_data <- function(survey, vessel, cruise, channel = NULL){
 
 mk9_get_mbt_data <- function(survey, vessel, cruise, channel = NULL){
   
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
   survey <- toupper(survey)
   
   ## cruise year
@@ -272,7 +272,7 @@ mk9_get_mbt_data <- function(survey, vessel, cruise, channel = NULL){
 
 mk9_get_sgt_data <- function(survey, vessel, cruise, channel = NULL){
   
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
   
   # make sure survey in uppercase
   survey <- toupper(survey)
@@ -343,7 +343,7 @@ mk9_get_sgt_data <- function(survey, vessel, cruise, channel = NULL){
 
 mk9_get_regr <- function(survey, vessel, cruise, channel = NULL){
   
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
   
   year <- floor(cruise/100)
   

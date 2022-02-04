@@ -19,14 +19,14 @@ Create a new directory for processing data.
 library(mk9process)
 library(trawllight)
 
-channel <- mk9process:::get_connected(schema = "AFSC")
+channel <- trawllight:::get_connected(schema = "AFSC")
 vessel <- 148 # Replace with vessel
 cruise <- 201001 # Replace with cruise
 survey <- "AI" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
 
 # Setup directory
 source_path <- "G:/RACE_LIGHT/LightData/Data/year_10/ai/v_148/" # Replace with the source directory
-mk9process::mk9_setup_dir(source_path = source_path,
+trawllight::mk9_setup_dir(source_path = source_path,
                           overwrite = TRUE,
                           survey = survey,
                           vessel = vessel,
@@ -39,7 +39,7 @@ Use WC-DAP software to decode binary (.wch) files and setup input csv files, as 
 ## 3. Offset
 
 ```{r offset, include=TRUE, eval=FALSE}
-mk9process::mk9_time_offset(channel = channel,
+trawllight::mk9_time_offset(channel = channel,
                         survey = survey,
                         cruise = cruise,
                         vessel = vessel)
@@ -48,7 +48,7 @@ mk9process::mk9_time_offset(channel = channel,
 ## 4. Retrieve haul events and set up cast times
 
 ```{r casttimes, include=TRUE, eval=FALSE}
-mk9process::mk9_cast_times(channel = channel,
+trawllight::mk9_cast_times(channel = channel,
                        survey = survey,
                        cruise = cruise,
                        vessel = vessel)
@@ -57,7 +57,7 @@ mk9process::mk9_cast_times(channel = channel,
 ## 5. Align data and write output to CSV
 
 ```{r extinction, include=TRUE, eval = FALSE}
-mk9process::mk9_extinction(channel = channel,
+trawllight::mk9_extinction(channel = channel,
                        survey = survey,
                        cruise = cruise,
                        vessel = vessel)
