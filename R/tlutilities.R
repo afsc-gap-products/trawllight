@@ -223,7 +223,7 @@ tlu_prep_haul_data <- function(channel = NULL,
   
   survey <- toupper(survey)
   
-  channel <- mk9process:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel)
   
   qry <- paste0("select vessel, cruise, haul, start_time, stationid, start_latitude, start_longitude, end_latitude, end_longitude, bottom_depth, performance, haul_type, region, stratum from racebase.haul where cruise > 200400 and region = '", survey, "'")
   
