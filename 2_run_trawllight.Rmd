@@ -16,9 +16,10 @@ The code in this document is used to run the trawllight algorithm from RACE's da
 Setup the directory for a survey region (options: "BS", "NBS", "GOA", "AI", "SLOPE") and retrieve haul data. Specify the root directory where irradiance data are stored (G:/RACE_LIGHT/LightData/Data). The root directory will be mapped to list locations where light data from vessel/year are stored imports/directories.csv.
 
 ```{r setup, include=TRUE, eval=FALSE}
-survey <- "BS"
+library(trawllight)
+survey <- "AI"
 
-trawllight::tlu_setup_dir(survey = "BS", 
+trawllight::tlu_setup_dir(survey = "AI", 
                           light_data_root = "G:/RACE_LIGHT/LightData/Data")
 ```
 
@@ -32,21 +33,21 @@ Outputs of the function are rds files in the output directory that contains binn
 
 ```{r getcasts, include=TRUE, eval=FALSE}
 trawllight::tlu_get_casts(
-  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:32,]),
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[1:12,]),
   survey = survey,
   cast.dir = "downcast",
   time.buffer = 20,
-  silent = TRUE,
+  silent = FALSE,
   bin.size = 2,
   bin.gap = 6,
   agg.fun = trawllight::geometric.mean)
 
 trawllight::tlu_get_casts(
-  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:32,]),
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[1:12,]),
   survey = survey,
   cast.dir = "upcast",
   time.buffer = 20,
-  silent = TRUE,
+  silent = FALSE,
   bin.size = 2,
   bin.gap = 6,
   agg.fun = trawllight::geometric.mean)
@@ -60,7 +61,7 @@ Function arguments below (time.buffer=30, agg.fun=trawllight::geometric.mean) ar
 
 ```{r getsurface, include=TRUE, eval=FALSE}
 trawllight::tlu_get_surface(
-  data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[3:32,]),
+  data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[1:12,]),
   survey = survey, 
   time.buffer = 30, 
   agg.fun = trawllight::geometric.mean)
@@ -72,6 +73,6 @@ The trawllight::tlu_run_trawllight() function runs trawllight QA/QC protocols. O
 
 ```{r runtrawllight, include=TRUE, eval=FALSE}
 trawllight::tlu_run_trawllight(rm.temp = TRUE, 
-                               survey = "BS")
+                               survey = survey)
 ```
 

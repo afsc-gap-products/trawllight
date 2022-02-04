@@ -19,7 +19,7 @@ tlu_get_casts(
 \arguments{
 \item{directory_structure}{File path to csv file that lists directories to be processed.}
 
-\item{survey}{RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE".}
+\item{survey}{RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")}
 
 \item{cast.dir}{Cast direction, either "upcast" or "downcast"}
 

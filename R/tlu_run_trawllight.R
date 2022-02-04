@@ -12,7 +12,7 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
   
   if(!file.exists(here::here("output", paste0("temp_", region_light, "_combined_huds.rds")))) {
     print("tlu_run_trawllight: Combining haul, upcast, downcast, and surface (HUDS) data. Writing temp file to output/[region_light]_temp_combined_huds.rds.")
-    trawllight:::tlu_combine_casts() |>
+    trawllight:::tlu_combine_casts(survey = survey) |>
       saveRDS(here::here("output", paste0("temp_", region_light, "_combined_huds.rds")))
   }
   
@@ -57,7 +57,7 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
       trawllight:::tlu_use_casts() |> 
       merge(readRDS(here::here("output", paste0("temp_", region_light, "_interp_huds.rds")))) |>
       trawllight:::tlu_use_casts2() |>
-      cast_wrapper(id.col = c("vessel", "cruise", "haul", "updown"),
+      trawllight:::tlu_cast_wrapper(id.col = c("vessel", "cruise", "haul", "updown"),
                    FUN = light_proportion) |>
       dplyr::mutate(optical_depth = log(1) - log(light_ratio)) |>
       saveRDS(here::here("output", paste0("temp_", region_light, "_filtered_huds.rds")))

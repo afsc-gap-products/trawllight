@@ -18,7 +18,7 @@ tlu_get_surface <- function(directory_structure = NULL,
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   out_path <- here::here("output", paste0(region_light, "_surface", ".rds"))
   
-  surf <- trawllight:::tlu_process_all_surface(dir.structure = directory_structure[,1], ...)
+  surf <- trawllight:::tlu_process_all_surface(dir.structure = directory_structure[,1], survey = survey, ...)
   
   saveRDS(surf, file = out_path)
   return(surf)

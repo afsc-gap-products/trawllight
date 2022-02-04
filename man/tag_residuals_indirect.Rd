@@ -7,7 +7,7 @@
 tag_residuals_indirect(
   x,
   formula = log10(trans_llight) ~ s(PAR, bs = "cr"),
-  utc.offset = -8,
+  utc.offset = NULL,
   lat.col = "latitude",
   lon.col = "longitude",
   time.col = "start_time",
