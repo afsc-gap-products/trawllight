@@ -812,7 +812,7 @@ tlu_calc_summary <- function(survey) {
   od_df <- readRDS(list.files(here::here("output"), pattern = paste0("temp_", region_light, "_filtered_huds"), full.names = TRUE))
   
   print("tlu_calc_summary: Estimating z[10]")  
-  Z10_df <- trawllight::tlu_cast_wrapper(
+  Z10_df <- trawllight:::tlu_cast_wrapper(
     x = od_df,
     id.col = c("vessel", "cruise", "haul", "updown"),
     FUN = trawllight::find_optical_depth,
