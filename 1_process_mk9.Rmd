@@ -16,16 +16,15 @@ This markdown document contains code used for processing and aligning irradiance
 Create a new directory for processing data.
 
 ```{r setup, include=TRUE, eval=FALSE}
-library(mk9process)
 library(trawllight)
 
 channel <- trawllight:::get_connected(schema = "AFSC")
-vessel <- 148 # Replace with vessel
-cruise <- 201001 # Replace with cruise
+vessel <- 143 # Replace with vessel
+cruise <- 201801 # Replace with cruise
 survey <- "AI" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
 
 # Setup directory
-source_path <- "G:/RACE_LIGHT/LightData/Data/year_10/ai/v_148/" # Replace with the source directory
+source_path <- "G:/RACE_LIGHT/LightData/Data/year_18/ai/v_143/" # Replace with the source directory
 trawllight::mk9_setup_dir(source_path = source_path,
                           overwrite = TRUE,
                           survey = survey,
