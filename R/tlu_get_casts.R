@@ -3,7 +3,7 @@
 #' Description goes here... writes binned cast data to an rds file after interpolating missing surface values.
 #' 
 #' @param directory_structure File path to csv file that lists directories to be processed.
-#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE".
+#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")
 #' @param cast.dir Cast direction, either "upcast" or "downcast"
 #' @param time.buffer Time buffer in seconds to add/subtract from upcast and downcast times. Default = 20
 #' @param bin.size Passed to trawllight::filter_stepwise. Depth bin size for aggregating light measurements.  Default = 2
@@ -68,7 +68,7 @@ tlu_get_casts <- function(directory_structure = NULL,
     if(!file.exists(here::here("output", paste0("temp_resid_", jj, ".rds")))) {
       
       cast_dat <- trawllight:::tlu_process_all(
-        dir.structure = directory_structure[jj,],
+        dir.path = directory_structure[jj,],
         cast.dir = cast.dir,
         time.buffer = time.buffer,
         silent = silent,
@@ -76,10 +76,13 @@ tlu_get_casts <- function(directory_structure = NULL,
         bin.gap = bin.gap,
         agg.fun = agg.fun)
       
-      saveRDS(cast_dat$light_ratios, file = here::here("output", paste0("temp_od_", jj, ".rds")))
-      saveRDS(cast_dat$atten_values, file = here::here("output", paste0("temp_kd_", jj, ".rds")))
-      saveRDS(cast_dat$loess_eval, file = here::here("output", paste0("temp_loess_", jj, ".rds")))
-      saveRDS(cast_dat$resid_fit, file = here::here("output", paste0("temp_resid_", jj, ".rds")))
+      
+      if(!is.null(cast_dat)) {
+        saveRDS(cast_dat$light_ratios, file = here::here("output", paste0("temp_od_", jj, ".rds")))
+        saveRDS(cast_dat$atten_values, file = here::here("output", paste0("temp_kd_", jj, ".rds")))
+        saveRDS(cast_dat$loess_eval, file = here::here("output", paste0("temp_loess_", jj, ".rds")))
+        saveRDS(cast_dat$resid_fit, file = here::here("output", paste0("temp_resid_", jj, ".rds")))
+      }
     }
     
   }
