@@ -19,7 +19,7 @@
 #' @export
 
 tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs = "cr"),
-                                   utc.offset = -8,
+                                   utc.offset = NULL,
                                    lat.col = "latitude",
                                    lon.col = "longitude",
                                    time.col = "start_time",
@@ -31,6 +31,11 @@ tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs 
   names(x)[names(x) == lon.col] <- "longitude"
   names(x)[names(x) == time.col] <- "start_time"
   names(x)[names(x) == light.col] <- "trans_llight"
+  
+  if(class(x$start_time[1]) == "POSIXct") {
+    # Use UTC times for fishmethods::astrocalc4r
+    utc_start_time <- lubridate::with_tz(x$start_time, tzone = "UTC")
+  }
 
   lout <- list()
 
@@ -38,11 +43,11 @@ tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs 
     stop(paste0("tag_residuals_direct: Cannot calculate residuals. Some depth.bins not found in ", depth.col))
   }
 
-  x <- cbind(x, fishmethods::astrocalc4r(day = lubridate::day(x$start_time),
-                                         month = lubridate::month(x$start_time),
-                                         year = lubridate::year(x$start_time),
-                                         hour = lubridate::hour(x$start_time) + lubridate::minute(x$start_time)/60,
-                                         timezone = rep(-8, nrow(x)),
+  x <- cbind(x, fishmethods::astrocalc4r(day = lubridate::day(utc_start_time),
+                                         month = lubridate::month(utc_start_time),
+                                         year = lubridate::year(utc_start_time),
+                                         hour = lubridate::hour(utc_start_time) + lubridate::minute(utc_start_time)/60,
+                                         timezone = rep(0, nrow(x)),
                                          lat = x$latitude,
                                          lon = x$longitude,
                                          seaorland = "maritime"))
