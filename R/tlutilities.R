@@ -2,7 +2,7 @@
 #'
 #' For use processing AOPs from AFSC/RACE/GAP data structure. This function is designed to work with the file structure of RACE light data to subset all of the Mk9 data obtained during upscasts and downcasts. process_all runs functions trawllight::convert_light, trawllight::filter_stepwise, and trawllight::calculate_attenuation on the data.
 #' 
-#' @param dir.structure Vector of file paths to directories containing corr_MK9hauls.csv and CastTimes.csv files.
+#' @param dir.path Vector of file paths to directories containing corr_MK9hauls.csv and CastTimes.csv files.
 #' @param time.buffer Buffer around upcast_start and downcast_start
 #' @param cast.dir Cast direction, either 'Downcast' or 'Upcast'
 #' @param agg.fun Function to use to calculate light for a depth bin (Default = median)
@@ -11,7 +11,7 @@
 #' @param kz.binsize Bin size for interpolation
 #' @noRd
 
-tlu_process_all <- function(dir.structure,
+tlu_process_all <- function(dir.path,
                             time.buffer = 20,
                             cast.dir = "downcast",
                             agg.fun = median,
@@ -25,19 +25,27 @@ tlu_process_all <- function(dir.structure,
   loess_eval <- 1
   
   # Loops over directory structure ----
-  for(i in 1:length(dir.structure)) {
-    
-    if(file.exists(paste(dir.structure[i], "/corr_MK9hauls.csv", sep = "")) &
-       file.exists(paste(dir.structure[i], "/CastTimes.csv", sep = ""))) {
+    if(file.exists(paste(dir.path, "/corr_MK9hauls.csv", sep = "")) &
+       file.exists(paste(dir.path, "/CastTimes.csv", sep = ""))) {
       
-      corr_mk9hauls <- read.csv(paste(dir.structure[i], "/corr_MK9hauls.csv", sep = ""))
-      casttimes <- read.csv(paste(dir.structure[i], "/CastTimes.csv", sep = ""))
+      corr_mk9hauls <- read.csv(paste(dir.path, "/corr_MK9hauls.csv", sep = ""))
+      casttimes <- read.csv(paste(dir.path, "/CastTimes.csv", sep = ""))
       
+      ctime_1 <- corr_mk9hauls$ctime[1]
+      ctime_2 <- casttimes$downcast_start[1]
       corr_mk9hauls$ctime <- as.POSIXct(strptime(corr_mk9hauls$ctime, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
       casttimes$downcast_start <- as.POSIXct(strptime(casttimes$downcast_start, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) - time.buffer
       casttimes$downcast_end <- as.POSIXct(strptime(casttimes$downcast_end, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) + time.buffer
       casttimes$upcast_start <- as.POSIXct(strptime(casttimes$upcast_start, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) - time.buffer
       casttimes$upcast_end <- as.POSIXct(strptime(casttimes$upcast_end, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) + time.buffer
+      
+      if(is.na(casttimes$downcast_start[1])) {
+        stop(paste(dir.path, "/CastTimes.csv date format not recognized! (", ctime_2, " >>> ", casttimes$downcast_start[1], ")" , sep = ""))
+      }
+      
+      if(is.na(corr_mk9hauls$ctime[1])) {
+        stop(paste(dir.path, "/corr_MK9hauls.csv date format not recognized! (", ctime_1, " >>> ", corr_mk9hauls$ctime[1], ")" , sep = ""))
+      }
       
       for(j in 1:nrow(casttimes)) {
         if(!silent) {
@@ -101,14 +109,15 @@ tlu_process_all <- function(dir.structure,
           }
         }
       }
+      return(list(loess_eval = loess_eval,
+                  atten_values = atten_values,
+                  light_ratios = light_ratios,
+                  resid_fit = resid_fit))
     } else {
-      print(paste("File(s) not found in directory ", dir.structure, ". Directory skipped."))
+     print(paste("corr_MK9hauls.csv and/or CastTimes.csv file(s) not found in ", dir.path, "."))
+      return(NULL)
     }
-  }
-  return(list(loess_eval = loess_eval,
-              atten_values = atten_values,
-              light_ratios = light_ratios,
-              resid_fit = resid_fit))
+
 }
 
 #' Loop surface_light
@@ -117,19 +126,22 @@ tlu_process_all <- function(dir.structure,
 #'
 #' @param dir.structure A character vector containing filepaths for all of the directories containing light measurements from surface/deck archival tags.
 #' @param adjust.time Should trawllight::tlu_time_adjustments function be used to adjust surface times to match survey time.
+#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")
 #' @param ... Additional arguments to be passed to surface_light or time_adjustments
 #' @noRd
 
-tlu_process_all_surface <- function(dir.structure, adjust.time = T, ...) {
+tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...) {
   
   surface.output <- NULL
+  
+  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   
   for(t in 1:length(dir.structure)) {
     
     # Check for CastTimes
     if(!file.exists(paste(dir.structure[t], "/CastTimes.csv", sep = ""))) {
-      stop(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.structure[t])))
-    }
+      print(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.structure[t])))
+    } else {
     
     # Import CastTImes
     print(paste("Processing", dir.structure[t]))
@@ -172,7 +184,8 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, ...) {
       if(adjust.time) {
         # Correct cases where there is a mismatch between survey time and tag time
         deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
-                                                       cast.data = cast.times)
+                                                       cast.data = cast.times,
+                                                       survey = survey)
       }
       if(nrow(deck.data) > 0) {
         
@@ -192,6 +205,7 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, ...) {
         }
       }
     }
+    }
   }
   return(surface.output)
 }
@@ -209,7 +223,7 @@ tlu_prep_haul_data <- function(channel = NULL,
   
   survey <- toupper(survey)
   
-  channel <- mk9process::get_connected(channel = channel)
+  channel <- mk9process:::get_connected(channel = channel)
   
   qry <- paste0("select vessel, cruise, haul, start_time, stationid, start_latitude, start_longitude, end_latitude, end_longitude, bottom_depth, performance, haul_type, region, stratum from racebase.haul where cruise > 200400 and region = '", survey, "'")
   
@@ -346,33 +360,37 @@ tlu_surface_light <- function(light.data, cast.data, time.buffer = 30, agg.fun =
 #' 
 #' @param light.data Data frame with light data
 #' @param cast.data Data frame containing case data.
+#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")
 #' @keywords internal
 #' @noRd
 
-tlu_time_adjustments <- function(light.data, cast.data) {
+tlu_time_adjustments <- function(light.data, cast.data, survey) {
+  
+  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
+  
   # Add vessel/cruise combination corrections for processing.
   # Offsets for tags set to the wrong time zone
-  if(cast.data$cruise[1] == 201601) {
+  if(cast.data$cruise[1] == 201601 & region_light == "ebs") {
     print("Correcting 2016")
     light.data$ctime <- light.data$ctime + 3600 # Time off by 1 hour
   }
   
-  if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201501) {
+  if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201501 & region_light == "ebs") {
     print("Correcting 94-201501")
     light.data$ctime <- light.data$ctime - 3600
   }
   
-  if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201401) {
+  if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201401 & region_light == "ebs") {
     print("Correcting 94-201401")
     light.data$ctime <- light.data$ctime - 3600
   }
   
-  if(cast.data$vessel[1] == 162 & cast.data$cruise[1] == 201101) {
+  if(cast.data$vessel[1] == 162 & cast.data$cruise[1] == 201101 & region_light == "ebs") {
     print("Correcting 162-201101")
     light.data$ctime <- light.data$ctime - (3600*8)
   }
   
-  if(cast.data$vessel[1] == 134 & cast.data$cruise[1] == 200601) {
+  if(cast.data$vessel[1] == 134 & cast.data$cruise[1] == 200601 & region_light == "ebs") {
     print("Correcting 134-200601")
     light.data$ctime[lubridate::month(light.data$ctime) >=7 & lubridate::day(light.data$ctime) > 8] <- light.data$ctime[lubridate::month(light.data$ctime) >=7 & lubridate::day(light.data$ctime) > 8] - 3600*12 # Time off by 1 hour
   }
@@ -385,30 +403,49 @@ tlu_time_adjustments <- function(light.data, cast.data) {
 #' Combine haul data with light data from upcasts, downcasts, and surface.
 #' 
 #' @param haul.dat Haul data as a data frame. Default NULL searches for haul_data file in the output directory.
+#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")
 #' @param surface Surface light data as a data frame. Default NULL searches for surface data in the output directory.
 #' @param downcasts Downcast data as a list that includes the light_data data frame. Default NULL searches for downcast data in the output directory.
 #' @param upcasts Upcast data as a list that includes the light_Data data frame. Default NULL searaches for upcast data in the output directory.
 #' @noRd
 
 tlu_combine_casts <- function(haul.dat = NULL,
+                              survey,
                               surface = NULL,
                               downcasts = NULL,
                               upcasts = NULL) {
   
-  if(is.null(haul.dat)) {
-    haul.dat <- readRDS(file = list.files(path = here::here("data"), pattern = "haul_data", full.names = TRUE))
-  }
+  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   
+  if(is.null(haul.dat)) {
+    haul.dat <- list.files(path = here::here("data"), 
+               pattern = paste0(survey, "_haul_data"), 
+               full.names = TRUE)
+    print(paste0("tlu_combine_casts: Loading ", haul.dat))
+    haul.dat <- readRDS(file = haul.dat )
+  }
   if(is.null(surface)) {
-    surface <- readRDS(file = list.files(path = here::here("output"), pattern = "surface", full.names = TRUE))
+    surface <- list.files(path = here::here("output"), 
+                          pattern = paste0(region_light, "_surface"), 
+                          full.names = TRUE)
+    print(paste0("tlu_combine_casts: Loading ", surface))
+    surface <- readRDS(file = surface)
   }
   
   if(is.null(downcasts)) {
-    downcasts <- readRDS(file = list.files(path = here::here("output"), pattern = "downcast", full.names = TRUE))
+    downcasts <- list.files(path = here::here("output"), 
+               pattern = paste0(region_light, "_downcast"), 
+               full.names = TRUE)
+    print(paste0("tlu_combine_casts: Loading ", downcasts))
+    downcasts <- readRDS(file = downcasts)
   }
   
   if(is.null(upcasts)) {
-    upcasts <- readRDS(file = list.files(path = here::here("output"), pattern = "upcast", full.names = TRUE))
+    upcasts <- list.files(path = here::here("output"), 
+                         pattern = paste0(region_light, "_upcast"), 
+                         full.names = TRUE)
+    print(paste0("tlu_combine_casts: Loading ", upcasts))
+    upcasts <- readRDS(file = upcasts)
   }
 
   down <- merge(downcasts$light_ratios,
@@ -775,7 +812,7 @@ tlu_calc_summary <- function(survey) {
   od_df <- readRDS(list.files(here::here("output"), pattern = paste0("temp_", region_light, "_filtered_huds"), full.names = TRUE))
   
   print("tlu_calc_summary: Estimating z[10]")  
-  Z10_df <- trawllight::cast_wrapper(
+  Z10_df <- trawllight::tlu_cast_wrapper(
     x = od_df,
     id.col = c("vessel", "cruise", "haul", "updown"),
     FUN = trawllight::find_optical_depth,
@@ -786,7 +823,7 @@ tlu_calc_summary <- function(survey) {
     unique()
   
   print("tlu_calc_summary: Estimating z[1]")  
-  Z1_df <- trawllight:::cast_wrapper(
+  Z1_df <- trawllight:::tlu_cast_wrapper(
     x = od_df,
     id.col = c("vessel", "cruise", "haul", "updown"),
     FUN = trawllight::find_optical_depth,
