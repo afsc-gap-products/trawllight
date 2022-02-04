@@ -10,8 +10,8 @@ The most recent version of the trawllight package was built in R 4.1.1.
 trawllight can be installed by starting R and running the following code. Installation requires the devtools package.
 
 ```
-require(devtools)
-install_github("sean-rohan-NOAA/trawllight")
+require(remotes)
+remotes::install_github("sean-rohan-NOAA/trawllight")
 ```
 
 ## Data processing
