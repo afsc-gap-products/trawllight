@@ -1,0 +1,68 @@
+---
+title: "MK9 workflow"
+author: "Sean Rohan"
+date: "1/24/2022"
+output: html_document
+---
+
+*WARNING: DO NOT KNIT THIS DOCUMENT! Run chunks individually.*
+
+# Introduction
+
+This markdown document contains code used for processing and aligning irradiance data collected using trawl-mounted archival tags (Wildlife Computers TDR-MK9) during AFSC bottom trawl surveys. This code should be run for one vessel/cruise combination at a time.
+
+## 1. Setup local processing directory
+
+Create a new directory for processing data.
+
+```{r setup, include=TRUE, eval=FALSE}
+library(mk9process)
+library(trawllight)
+
+channel <- mk9process:::get_connected(schema = "AFSC")
+vessel <- 148 # Replace with vessel
+cruise <- 201001 # Replace with cruise
+survey <- "AI" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
+
+# Setup directory
+source_path <- "G:/RACE_LIGHT/LightData/Data/year_10/ai/v_148/" # Replace with the source directory
+mk9process::mk9_setup_dir(source_path = source_path,
+                          overwrite = TRUE,
+                          survey = survey,
+                          vessel = vessel,
+                          cruise = cruise)
+```
+## 2. Decode .wch file
+
+Use WC-DAP software to decode binary (.wch) files and setup input csv files, as described in [0_decode_mk9.Md](/0_decode_mk9.Md).
+
+## 3. Offset
+
+```{r offset, include=TRUE, eval=FALSE}
+mk9process::mk9_time_offset(channel = channel,
+                        survey = survey,
+                        cruise = cruise,
+                        vessel = vessel)
+```
+
+## 4. Retrieve haul events and set up cast times
+
+```{r casttimes, include=TRUE, eval=FALSE}
+mk9process::mk9_cast_times(channel = channel,
+                       survey = survey,
+                       cruise = cruise,
+                       vessel = vessel)
+```
+
+## 5. Align data and write output to CSV
+
+```{r extinction, include=TRUE, eval = FALSE}
+mk9process::mk9_extinction(channel = channel,
+                       survey = survey,
+                       cruise = cruise,
+                       vessel = vessel)
+```
+
+## 6. Move to storage
+
+Move the processed files to the storage directory.
