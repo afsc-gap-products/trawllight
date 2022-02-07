@@ -14,7 +14,7 @@ require(remotes)
 remotes::install_github("sean-rohan-NOAA/trawllight")
 ```
 
-## Data processing
+# Data processing
 
 ### Stage 1: Decode
 
