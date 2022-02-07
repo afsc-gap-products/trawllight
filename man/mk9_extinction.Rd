@@ -4,7 +4,7 @@
 \alias{mk9_extinction}
 \title{Write time-corrected data to csv}
 \usage{
-mk9_extinction(channel, survey, vessel, cruise)
+mk9_extinction(channel, survey, vessel, cruise, make.plots = TRUE)
 }
 \arguments{
 \item{channel}{Oracle connection as an RODBC connection object.}
@@ -14,6 +14,8 @@ mk9_extinction(channel, survey, vessel, cruise)
 \item{vessel}{RACE vessel code a numeric vector.}
 
 \item{cruise}{RACE cruise code as a numeric vector.}
+
+\item{make.plots}{Should cast plots be written to pdf?}
 }
 \description{
 Use estimated offsets to time-correct MK9 data.

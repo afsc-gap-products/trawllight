@@ -6,9 +6,10 @@
 #' @param survey RACE survey code as a character vector.
 #' @param vessel RACE vessel code a numeric vector.
 #' @param cruise RACE cruise code as a numeric vector.
+#' @param make.plots Should cast plots be written to pdf?
 #' @export
 
-mk9_extinction <- function(channel, survey, vessel, cruise){
+mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
   
   channel <- trawllight:::get_connected(channel = channel)
 
@@ -238,5 +239,43 @@ mk9_extinction <- function(channel, survey, vessel, cruise){
 
 	## place corrected haul-specific light meter data into the vessel's data directory
 	write.csv(light.df, paste(light.loc, "/corr_MK9hauls.csv", sep= ""), row.names = F)
+	
+	if(make.plots) {
+	  dat_to_plot <- light.df |>
+	    dplyr::select(vessel, cruise, haul, cdepth, ctime, ltemp, llight)
+	  
+	  dat_to_plot$ctime <- as.POSIXct(dat_to_plot$ctime)
+	  
+	  head(dat_to_plot)
+	  
+	  unique_hauls <- dat_to_plot |> 
+	    dplyr::select(vessel, cruise, haul) |>
+	    unique()
+	  
+	  nrow(unique_hauls)
+	  
+	  print(paste0("Writing haul plots to ", light.loc, "/plots_cast_dat.pdf"))
+	  pdf(file = paste0(light.loc, "/plots_cast_dat.pdf"), onefile = TRUE)
+	  for(ii in 1:nrow(unique_hauls)) {
+	    haul_sub <- dat_to_plot |>
+	      dplyr::filter(vessel == unique_hauls$vessel[ii], 
+	                    cruise == unique_hauls$cruise[ii], 
+	                    haul == unique_hauls$haul[ii]) 
+	    
+	    print(
+	      ggplot2::ggplot() +
+	        ggplot2::geom_line(data =  haul_sub |> 
+	                            tidyr::pivot_longer(cols = c("ltemp", "llight", "cdepth")),
+	                          ggplot2::aes(x = ctime, 
+	                                      y = value, 
+	                                      color = name)) +
+	        ggplot2::facet_wrap(~name, scales = "free_y", 
+	                           nrow = 3) +
+	        ggplot2::ggtitle(paste0("Vessel: ", unique_hauls$vessel[ii], ", Cruise: ", unique_hauls$cruise[ii], ", Haul: ", unique_hauls$haul[ii])) + 
+	        ggplot2::theme_bw()
+	    )
+	  }
+	  dev.off()
+	}
 
 	}

@@ -145,6 +145,8 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 
 	# by haul loop to generate time offsets
 	i = 1
+	print("mk9_time_offset: Making plots")
+	pdf(file = paste0(light.loc, "/plot_offset_step_2.pdf"), onefile = TRUE)
 	for (i in 1:length(rsqr[,1])) {
 		if(is.na(rsqr[i,180])) {
 			offset[i] = NA
@@ -155,14 +157,28 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 			a[i] = aa[i,][rsqr[i,] == max(rsqr[i,])]
 			b[i] = bb[i,][rsqr[i,] == max(rsqr[i,])]
 			max.rsqr[i] = max(rsqr[i,])
-			# plots rsqr by offset
-			plot(c(-180:180), rsqr[i,], ylim = c(min(rsqr[i,]), max(rsqr[i,])), main = paste("Haul No.", haullist[i], sep = " "),
+			
+			if(length(aa[i,][rsqr[i,] == max(rsqr[i,])]) != 1) {
+			  warning(paste0("mk9_time_offset: length of 'length(aa[i,][rsqr[i,] == max(rsqr[i,])])' is equal to ", length(aa[i,][rsqr[i,] == max(rsqr[i,])])))
+			}
+			
+			if(length(bb[i,][rsqr[i,] == max(rsqr[i,])]) != 1) {
+			  warning(paste0("mk9_time_offset: length of 'length(bb[i,][rsqr[i,] == max(rsqr[i,])])' is equal to ", length(bb[i,][rsqr[i,] == max(rsqr[i,])])))
+			}
+			
+			if(any(is.na(c(a[i], b[i])))) {
+			  warning("mk9_time_offset: max.rsqr for ", haullist[i], " is NA")
+			}
+			
+			plot(c(-180:180), rsqr[i,], ylim = c(min(rsqr[i,], na.rm = TRUE), max(rsqr[i,], na.rm = TRUE)), main = paste("Haul No.", haullist[i], sep = " "),
 				ylab = "iterative fit (r-sqr)", xlab = "3-minute range for fitting (seconds)")
 			}
-		}
+	}
+	dev.off()
 
 	haul.time = sgt$date_time[sgt$time_flag == 3]
 	
+	pdf(file = paste0(light.loc, "/plot_offset_by_haul.pdf"), onefile = TRUE)
 	# plot offsets by haul
 	plot(offset ~ haul.time, col = "darkblue", main = "MK9 time offset from MBT \nacross survey", 
 		xlab = "time (haul start)", ylab = "offset (seconds)")
@@ -171,6 +187,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	smooth = predict(loess(offset ~ as.numeric(haul.time), weights = ifelse(max.rsqr > .85, max.rsqr^10, 0), 
 		span = 20/length(offset)), seq(min(haul.time), max(haul.time), I(60*30)))
 	lines(seq(min(haul.time), max(haul.time), I(60*30)), smooth, col = 'red')
+	dev.off()
 	# smooth2 is the loess predicted offset value for each haul
 	smooth2 = predict(loess(offset ~ as.numeric(haul.time), weights = ifelse(max.rsqr > .85, max.rsqr^10,0), 
 		span = 20/length(offset)), haul.time)

@@ -42,7 +42,7 @@ The file to be converted is the csv file ending in 'Archive.csv':
 In R, use trawllight::mk9_convert_wcdap_archive() to convert the Archive csv file into a format that is compatible with trawllight:
 ```
 library(trawllight)
-mk9process::mk9_convert_wcdap_archive(dir_path = "C:/Users/sean.rohan/Work/wch/",
+trawllight::mk9_convert_wcdap_archive(dir_path = "C:/Users/sean.rohan/Work/wch/",
                                       file_name = "1190402_072821-Archive.csv",
                                       plot_check = TRUE,
                                       type = NULL)
