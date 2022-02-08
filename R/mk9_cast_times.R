@@ -51,7 +51,7 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 	yy <- as.character(substr(cruise,3,4))
 	sur <- survey.names$dir_name[survey.names$cap_name == survey]
 	light.loc <- here::here("data", "mk9", survey, cruise, vessel) #paste(getwd(), "/Data/year_", yy, "/", sur, "/v_", vessel, sep = "")
-	files.in.dir <- list.files(path = light.loc)
+	files.in.dir <- list.files(path = light.loc, pattern = ".csv")
 	file.idx1 <- which(substr(files.in.dir, 1, 4) == "trwl")
 
 	## identify offsets file and read in (there should be just one)
@@ -98,7 +98,7 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 
 	for (file in file.idx1) {
 		assign(paste("trwl", file, sep = ""),
-		read.csv(paste(light.loc, "/", files.in.dir[file], sep= "" ), header = F))
+		read.csv(paste(light.loc, "/", files.in.dir[file], sep= "" ), header = F, skip = 1))
 		}
 
 	# empty data set to receive raw MK9 data

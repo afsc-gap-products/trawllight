@@ -45,7 +45,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	
 	# identify the MK9 data that came from the trawl-mounted meter
 	# this is a naming convention applied when writing the CSV out from HexDecode
-	files.in.dir <- list.files(path = light.loc)
+	files.in.dir <- list.files(path = light.loc, pattern = ".csv")
 	file.idx <- which(substr(files.in.dir, 1, 4) == "trwl")
 
 	# there can be multiple files on a single vessel and these will be numbered sequentially
@@ -54,7 +54,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 
 		# assign a value to a name in an environment
 		assign(paste("trwl", file, sep = ""), read.csv(paste(light.loc, "/", files.in.dir[file], 
-			sep = ""), header = F))
+			sep = ""), header = F, skip = 1))
 			
 		}
 
@@ -70,6 +70,8 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	
 	# format MK9 time to same as found in SGT and MBT
 	light$date_time <- as.POSIXct(paste(light$V1, light$V2), format = "%m/%d/%Y %H:%M:%S")
+	
+
 	
 	print(paste0("mk9_time_offset: Imported ", nrow(light), " rows of data in ", ncol(light), " variable columns."))
 	
