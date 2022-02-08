@@ -110,7 +110,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	
 	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 
-	                                      try.offsets = seq(-8,8,0.5), 
+	                                      try.offsets = c(seq(-8,8,0.5),0.25,-0.25), 
 	                                      results.file = paste0(light.loc, "/offset_step1_log.txt"))
 
 	## identify offsets file and read in (there should be just one)
