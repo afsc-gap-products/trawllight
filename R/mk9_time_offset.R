@@ -41,7 +41,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	sur <- survey.names$dir_name[survey.names$cap_name == survey]
 
 	# path to data and storage directory
-	light.loc <- here::here("data", "mk9", survey, cruise, vessel) #paste(getwd(), "/Data/year_", yy, "/", sur, "/v_", vessel, sep = "")
+	light.loc <- here::here("data", "mk9", survey, cruise, vessel)
 	
 	# identify the MK9 data that came from the trawl-mounted meter
 	# this is a naming convention applied when writing the CSV out from HexDecode
@@ -95,7 +95,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	
 	light <- trawllight:::mk9_find_offset(light = light, 
 	                                     mbt = mbt, 
-	                                     try.offsets = seq(-8,8,0.5), 
+	                                     try.offsets = c(seq(-8,8,0.5),0.25,-0.25), 
 	                                     results.file = paste0(light.loc, "/offset_step1_log.txt"))
 
 	# create objects to be populated later
@@ -183,16 +183,21 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	pdf(file = paste0(light.loc, "/plot_offset_by_haul.pdf"), onefile = TRUE)
 	# plot offsets by haul
 	plot(offset ~ haul.time, col = "darkblue", main = "MK9 time offset from MBT \nacross survey", 
-		xlab = "time (haul start)", ylab = "offset (seconds)")
+		xlab = "time (haul start)", ylab = "offset (seconds)", ylim = c(0.5, 1))
 	# use local polynomial smoothing across all hauls to get smoothed trend line for offsets over cruise
 	# weights are keyed to max.rsqr, span controls the degree of smoothing
-	smooth = predict(loess(offset ~ as.numeric(haul.time), weights = ifelse(max.rsqr > .85, max.rsqr^10, 0), 
-		span = 20/length(offset)), seq(min(haul.time), max(haul.time), I(60*30)))
+	smooth <- try(predict(loess(offset ~ as.numeric(haul.time), weights = ifelse(max.rsqr > .85, max.rsqr^10, 0), 
+		span = 20/length(offset)), seq(min(haul.time), max(haul.time), I(60*30))), silent = TRUE)
+	
+	if(class(smooth)[1] == "try-error") {
+	  smooth <- predict(loess(offset ~ as.numeric(haul.time), weights = ifelse(max.rsqr > .85, max.rsqr^10, 0), 
+	                    span = 20/length(offset)), seq(min(haul.time), max(haul.time), I(60*30)))
+	}
 	lines(seq(min(haul.time), max(haul.time), I(60*30)), smooth, col = 'red')
 	dev.off()
 	# smooth2 is the loess predicted offset value for each haul
 	smooth2 = predict(loess(offset ~ as.numeric(haul.time), weights = ifelse(max.rsqr > .85, max.rsqr^10,0), 
-		span = 20/length(offset)), haul.time)
+		span = 0.75), haul.time)
 	offsets = cbind(vessel, cruise, haul = haullist, offset, max.rsqr, a, b,
 		eq100m = a + b * 100, smooth_offset = smooth2)
 	
