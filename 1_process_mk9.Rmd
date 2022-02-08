@@ -20,11 +20,11 @@ library(trawllight)
 
 channel <- trawllight:::get_connected(schema = "AFSC")
 vessel <- 94 # Replace with vessel
-cruise <- 201902 # Replace with cruise
-survey <- "NBS" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
+cruise <- 202101 # Replace with cruise
+survey <- "BS" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
 
 # Setup directory
-source_path <- "G:/RACE_LIGHT/LightData/Data/year_19/nbs/v_94/" # Replace with the source directory
+source_path <- "G:/RACE_LIGHT/LightData/Data/year_21/ebs/v_94_oldtags/" # Replace with the source directory
 trawllight::mk9_setup_dir(source_path = source_path,
                           overwrite = TRUE,
                           survey = survey,
