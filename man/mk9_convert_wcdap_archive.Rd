@@ -21,5 +21,5 @@ mk9_convert_wcdap_archive(
 \item{type}{User specified type. Detected automatically if type = NULL (default). Otherwise, either "trwl" for trawl-mounted tag or "deck" for deck-mounted tag.}
 }
 \description{
-Converts an archive CSV file produced by WC-DAP to a CSV format that is compatible with trawllight. The CSV format for trawllight is based on a format that had been produced by Wildlife Computers HexDecoder software prior to 2017
+Converts an archive CSV file produced by WC-DAP or WC Instrument helper to a CSV format that is compatible with trawllight. The CSV format for trawllight is based on a format that had been produced by Wildlife Computers HexDecoder software prior to 2017
 }

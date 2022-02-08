@@ -1,6 +1,6 @@
 #' Convert WCDAP archive csv to trawllight csv format
 #' 
-#' Converts an archive CSV file produced by WC-DAP to a CSV format that is compatible with trawllight. The CSV format for trawllight is based on a format that had been produced by Wildlife Computers HexDecoder software prior to 2017
+#' Converts an archive CSV file produced by WC-DAP or WC Instrument helper to a CSV format that is compatible with trawllight. The CSV format for trawllight is based on a format that had been produced by Wildlife Computers HexDecoder software prior to 2017
 #' 
 #' @param dir_path Path to the directory containing the Archive.csv file
 #' @param file_name Name of the Archive.csv file. If NULL, searches for the file name in dir_path.
