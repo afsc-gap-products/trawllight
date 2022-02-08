@@ -50,7 +50,7 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 	survey.names <- as.data.frame(cbind(cap_name = c("AI","BS","GOA","SLOPE","NBS"), dir_name = c("ai","ebs","goa","slope","nbs")))
 	yy <- as.character(substr(cruise,3,4))
 	sur <- survey.names$dir_name[survey.names$cap_name == survey]
-	light.loc <- here::here("data", "mk9", survey, cruise, vessel) #paste(getwd(), "/Data/year_", yy, "/", sur, "/v_", vessel, sep = "")
+	light.loc <- here::here("data", "mk9", survey, cruise, vessel)
 	files.in.dir <- list.files(path = light.loc, pattern = ".csv")
 	file.idx1 <- which(substr(files.in.dir, 1, 4) == "trwl")
 
@@ -137,7 +137,7 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 	
 	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 
-	                                      try.offsets = seq(-8,8,0.5), 
+	                                      try.offsets = c(seq(-8,8,0.5),0.25,-0.25), 
 	                                      results.file = paste0(light.loc, "/offset_step1_log.txt"))
 
 	print("assigning hauls to MK9 data...")
