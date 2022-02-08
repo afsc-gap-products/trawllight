@@ -49,13 +49,13 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	## get Light (MK9) data
 	print("reading trawl-mounted MK9 file...")
 
-	files.in.dir <- list.files(path = light.loc)
+	files.in.dir <- list.files(path = light.loc, pattern = ".csv")
 	file.idx1 <- which(substr(files.in.dir, 1, 4) == "trwl")
 
 	## read in trawl-mounted light meter data (there could be more than one file)
 	for (file in file.idx1) {
 		assign(paste("trwl", file, sep = ""),
-		read.csv(paste(light.loc, "/", files.in.dir[file], sep= "" ), header = F))
+		read.csv(paste(light.loc, "/", files.in.dir[file], sep= "" ), header = F, skip = 1))
 		}
 
 	if(cruise <= 201801){
@@ -203,7 +203,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 		fb.pos <- sgt[sgt$haul == h & sgt$time_flag == 7, c("longitude","latitude")]
 
 		if(length(down[,1]) == 0){
-			down.cast.extinct = NA
+			dn.cast.extinct = NA
 		} else{
 			# get light intercept from light regressed on depth
 			down.coef <- lm(llight ~ cdepth, data = down)
