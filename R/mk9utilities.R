@@ -50,7 +50,13 @@ mk9_find_offset <- function(light, mbt, try.offsets = seq(-8,8,0.5), results.fil
     # Create offset to try
     light$ldate_time_offset <- light$ldate_time + try.offsets[i]*3600
     offset.df <- dplyr::inner_join(light, mbt, by = c("ldate_time_offset" = "date_time"))
-    try.cor[i] <- cor(offset.df$ldepth, offset.df$depth)
+    cor_i <- try(cor(offset.df$ldepth, offset.df$depth, use = "complete.obs"), silent = TRUE)
+    
+    if(class(cor_i) == "try-error") {
+      cor_i <- 0
+    }
+    
+    try.cor[i] <- cor_i
   }
   
   print(paste0("Offset for Mk9 is " , try.offsets[which.max(try.cor)], " hrs, with correlation between Mk9 and MBT depth of ", try.cor[which.max(try.cor)], "."))
@@ -59,14 +65,21 @@ mk9_find_offset <- function(light, mbt, try.offsets = seq(-8,8,0.5), results.fil
   light <- light[,-which(colnames(light) == "ldate_time_offset")]
   
   # Transform based on the best offset
-  light$ldate_time <- light$ldate_time + try.offsets[which.max(try.cor)]*3600
   
+  
+  if(max(try.cor) > 0.5) {
+    best_offset <- try.offsets[which.max(try.cor)]
+    light$ldate_time <- light$ldate_time + try.offsets[which.max(try.cor)]*3600
+  } else {
+    best_offset <- 0
+  }
+
   # Write offset and correlation to .txt file
   if(!is.null(results.file)) {
     fconn <- file(results.file)
-    writeLines(c(try.offsets[which.max(try.cor)],
+    writeLines(c(best_offset,
                  as.character(Sys.Date()),
-                 paste0("Offset: " , try.offsets[which.max(try.cor)], " hrs"),
+                 paste0("Offset: " , best_offset, " hrs"),
                  paste0("Corr: ", try.cor[which.max(try.cor)])),fconn)
     close(fconn)
   }
