@@ -1,6 +1,6 @@
 #' Wrapper function for filter_stepwise and calculate_attenuation using RACE data structure.
 #'
-#' For use processing AOPs from AFSC/RACE/GAP data structure. This function is designed to work with the file structure of RACE light data to subset all of the Mk9 data obtained during upscasts and downcasts. process_all runs functions trawllight::convert_light, trawllight::filter_stepwise, and trawllight::calculate_attenuation on the data.
+#' For use processing AOPs from AFSC/RACE/GAP data structure. This function is designed to work with the file structure of RACE light data to subset all of the Mk9 data obtained during upcasts and downcasts. process_all runs functions trawllight::convert_light, trawllight::filter_stepwise, and trawllight::calculate_attenuation on the data.
 #' 
 #' @param dir.path Vector of file paths to directories containing corr_MK9hauls.csv and CastTimes.csv files.
 #' @param time.buffer Buffer around upcast_start and downcast_start
@@ -241,10 +241,12 @@ tlu_prep_haul_data <- function(channel = NULL,
 #' 
 #' @param survey RACE survey code as a character vector.
 #' @param light_data_root Root directory for light data as a character vector.
+#' @param omit_string Optional character vector to filter directories to be removed.
 #' @noRd
 
 tlu_prep_dir_list <- function(survey, 
-                              light_data_root = "G:/RACE_LIGHT/LightData/Data") {
+                              light_data_root = "G:/RACE_LIGHT/LightData/Data",
+                              omit_string = "oldtags") {
   
   region_light <- c("ebs", "nbs", "goa", "ai")[match(survey, c("BS", "NBS", "GOA", "AI"))]
   
@@ -253,6 +255,16 @@ tlu_prep_dir_list <- function(survey,
                             recursive = TRUE, 
                             include.dirs = TRUE, 
                             full.names = TRUE)
+  
+  if(region_light == "ebs") {
+    print("Combining EBS and NBS directories")
+    region_dirs <- c(region_dirs, 
+                     list.files(light_data_root, 
+               pattern = "nbs", 
+               recursive = TRUE, 
+               include.dirs = TRUE, 
+               full.names = TRUE))
+  }
   
   vessel_dirs <- character()
   
@@ -263,6 +275,11 @@ tlu_prep_dir_list <- function(survey,
                                              recursive = TRUE,
                                              include.dirs = TRUE,
                                              full.names = TRUE))
+  }
+  
+  if(!is.null(omit_string)) {
+    vessel_dirs <- vessel_dirs[!grepl(pattern = omit_string, 
+                                      x = vessel_dirs)]
   }
   
   if(!dir.exists(here::here("imports"))) {

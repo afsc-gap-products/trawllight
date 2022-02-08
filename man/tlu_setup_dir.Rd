@@ -7,7 +7,8 @@
 tlu_setup_dir(
   channel = NULL,
   survey,
-  light_data_root = "G:/RACE_LIGHT/LightData/Data"
+  light_data_root = "G:/RACE_LIGHT/LightData/Data",
+  ...
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ tlu_setup_dir(
 \item{survey}{RACE survey code as a character vector.}
 
 \item{light_data_root}{Filepath to the data source}
+
+\item{...}{Additional arguments passed to trawllight:::tlu_prep_dir_list. Used to remove special projects directories from 2021 tag comparison project (Haehn, Laman, Rohan).}
 }
 \description{
 Setup directory and retrieve data for processing MK9 data.
