@@ -116,7 +116,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	  sub.light = subset(light, ldate_time > min.mbt - 300 & ldate_time < max.mbt + 300)
 	  colnames(sub.light)[5] = "date_time"
 	  sub.light2 = sub.light
-	  print(i)
+	  # print(i)
 
 	  for (j in 1:361) {
 	  

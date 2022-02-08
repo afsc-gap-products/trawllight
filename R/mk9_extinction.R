@@ -159,7 +159,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	## also compute extinction coefficients for down and upcasts and assign them to global positioning coordinates
 	for(h in sort(haullist$haul)) {
 
-		print(h)
+		# print(h)
 		## subset data by haul
 		haultime <- haullist[haullist$haul == h,c("starttime","haul.end","a","b","offset")]
 		## get smaller subset of data between start and end times
