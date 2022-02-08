@@ -1,6 +1,6 @@
 #' Wrapper function for filter_stepwise and calculate_attenuation using RACE data structure.
 #'
-#' For use processing AOPs from AFSC/RACE/GAP data structure. This function is designed to work with the file structure of RACE light data to subset all of the Mk9 data obtained during upscasts and downcasts. process_all runs functions trawllight::convert_light, trawllight::filter_stepwise, and trawllight::calculate_attenuation on the data.
+#' For use processing AOPs from AFSC/RACE/GAP data structure. This function is designed to work with the file structure of RACE light data to subset all of the Mk9 data obtained during upcasts and downcasts. process_all runs functions trawllight::convert_light, trawllight::filter_stepwise, and trawllight::calculate_attenuation on the data.
 #' 
 #' @param dir.path Vector of file paths to directories containing corr_MK9hauls.csv and CastTimes.csv files.
 #' @param time.buffer Buffer around upcast_start and downcast_start
@@ -137,76 +137,84 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   
   for(t in 1:length(dir.structure)) {
-    
+  
     # Check for CastTimes
     if(!file.exists(paste(dir.structure[t], "/CastTimes.csv", sep = ""))) {
       print(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.structure[t])))
     } else {
-    
-    # Import CastTImes
-    print(paste("Processing", dir.structure[t]))
-    cast.times <- read.csv(paste(dir.structure[t], "/CastTimes.csv", sep = ""))
-    
-    # Find names of deck files
-    deck.files <- list.files(path = dir.structure[t], pattern = "^deck.*\\.csv", full.names = T)
-    
-    # Check for CastTimes
-    if(length(deck.files) < 1) {
-      warning(paste("process_all_surface: Deck light measurements not found in" , paste(dir.structure[t])))
-    } else {
       
-      #Import first deck file
-      deck.data <- read.csv(file = deck.files[1], header = F, skip = 3)
-      deck.data$ctime <- paste(deck.data[,1], deck.data[,2], sep = " ")
+      # Import CastTImes
+      print(paste("Processing", dir.structure[t]))
+      cast.times <- read.csv(paste(dir.structure[t], "/CastTimes.csv", sep = ""))
       
-      # Import additional deck files if multiple exist in one directory
-      if(length(deck.files) > 1) {
-        for(b in 2:length(deck.files)) {
-          add.deck <- read.csv(file = deck.files[b], header = F, skip = 3)
-          add.deck$ctime <- paste(add.deck[,1], add.deck[,2], sep = " ")
-          deck.data <- rbind(deck.data, add.deck)
-        }
-      }
+      deck.exists <- file.exists(paste0(dir.structure[t], "/corr_deck.csv"))
       
-      # Convert times into POSIXct
-      deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
-      
-      # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
-      cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
-                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-      cast.times$downcast_end <- as.POSIXct(strptime(cast.times$downcast_end,
-                                                     format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-      cast.times$upcast_start <- as.POSIXct(strptime(cast.times$upcast_start,
-                                                     format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-      cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
-                                                   format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-      
-      if(adjust.time) {
-        # Correct cases where there is a mismatch between survey time and tag time
-        deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
-                                                       cast.data = cast.times,
-                                                       survey = survey)
-      }
-      if(nrow(deck.data) > 0) {
+      if(deck.exists) {
+        print(paste0("tlu_process_all_surface: Loading ", dir.structure[t], "/corr_deck.csv"))
+        deck.data <- read.csv(file = paste0(dir.structure[t], "/corr_deck.csv"))
+        deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+      } else {
+        # Find names of deck files
+        deck.files <- list.files(path = dir.structure[t], pattern = "^deck.*\\.csv", full.names = T)
         
-        # Find surface measurements
-        surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
-                                                           cast.data = cast.times,
-                                                           ...)
-        if(is.null(surface.output)) {
-          
-          surface.output <- surface_profiles
-          
+        # Check for CastTimes
+        if(length(deck.files) < 1) {
+          warning(paste("process_all_surface: Deck light measurements not found in" , paste(dir.structure[t])))
         } else {
-          if(!is.null(surface_profiles)) {
-            surface.output <- rbind(surface.output, surface_profiles)
-          }
           
+          #Import first deck file
+          deck.data <- read.csv(file = deck.files[1], header = F, skip = 3)
+          deck.data$ctime <- paste(deck.data[,1], deck.data[,2], sep = " ")
+          
+          # Import additional deck files if multiple exist in one directory
+          if(length(deck.files) > 1) {
+            for(b in 2:length(deck.files)) {
+              add.deck <- read.csv(file = deck.files[b], header = F, skip = 3)
+              add.deck$ctime <- paste(add.deck[,1], add.deck[,2], sep = " ")
+              deck.data <- rbind(deck.data, add.deck)
+            }
+          }
+        }
+        # Convert times into POSIXct
+        deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
+      }
+
+        
+        # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
+        cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
+                                                         format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+        cast.times$downcast_end <- as.POSIXct(strptime(cast.times$downcast_end,
+                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+        cast.times$upcast_start <- as.POSIXct(strptime(cast.times$upcast_start,
+                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+        cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
+                                                     format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+        
+        if(adjust.time & !deck.exists) {
+          # Correct cases where there is a mismatch between survey time and tag time
+          deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
+                                                         cast.data = cast.times,
+                                                         survey = survey)
+        }
+        if(nrow(deck.data) > 0) {
+          
+          # Find surface measurements
+          surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
+                                                             cast.data = cast.times,
+                                                             ...)
+          if(is.null(surface.output)) {
+            
+            surface.output <- surface_profiles
+            
+          } else {
+            if(!is.null(surface_profiles)) {
+              surface.output <- rbind(surface.output, surface_profiles)
+            }
+            
+          }
         }
       }
     }
-    }
-  }
   return(surface.output)
 }
 
@@ -241,10 +249,12 @@ tlu_prep_haul_data <- function(channel = NULL,
 #' 
 #' @param survey RACE survey code as a character vector.
 #' @param light_data_root Root directory for light data as a character vector.
+#' @param omit_string Optional character vector to filter directories to be removed.
 #' @noRd
 
 tlu_prep_dir_list <- function(survey, 
-                              light_data_root = "G:/RACE_LIGHT/LightData/Data") {
+                              light_data_root = "G:/RACE_LIGHT/LightData/Data",
+                              omit_string = "oldtags") {
   
   region_light <- c("ebs", "nbs", "goa", "ai")[match(survey, c("BS", "NBS", "GOA", "AI"))]
   
@@ -253,6 +263,16 @@ tlu_prep_dir_list <- function(survey,
                             recursive = TRUE, 
                             include.dirs = TRUE, 
                             full.names = TRUE)
+  
+  if(region_light == "ebs") {
+    print("Combining EBS and NBS directories")
+    region_dirs <- c(region_dirs, 
+                     list.files(light_data_root, 
+               pattern = "nbs", 
+               recursive = TRUE, 
+               include.dirs = TRUE, 
+               full.names = TRUE))
+  }
   
   vessel_dirs <- character()
   
@@ -263,6 +283,11 @@ tlu_prep_dir_list <- function(survey,
                                              recursive = TRUE,
                                              include.dirs = TRUE,
                                              full.names = TRUE))
+  }
+  
+  if(!is.null(omit_string)) {
+    vessel_dirs <- vessel_dirs[!grepl(pattern = omit_string, 
+                                      x = vessel_dirs)]
   }
   
   if(!dir.exists(here::here("imports"))) {
@@ -319,7 +344,9 @@ tlu_surface_light <- function(light.data, cast.data, time.buffer = 30, agg.fun =
   # Select and rename light and time columns
   if(ncol(light.data) >= 6) {
     light.data <- light.data[,5:6]
-  } else {
+  } else if(ncol(light.data) == 4) {
+    light.data <- light.data[,3:4]
+    }else {
     warning(paste("surface_light: Deck light measurements not found for" , cast.data$vessel[1], "-", cast.data$cruise[1]))
     return(NULL)
   }
@@ -370,25 +397,25 @@ tlu_time_adjustments <- function(light.data, cast.data, survey) {
   
   # Add vessel/cruise combination corrections for processing.
   # Offsets for tags set to the wrong time zone
-  if(cast.data$cruise[1] == 201601 & region_light == "ebs") {
-    print("Correcting 2016")
-    light.data$ctime <- light.data$ctime + 3600 # Time off by 1 hour
-  }
-  
-  if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201501 & region_light == "ebs") {
-    print("Correcting 94-201501")
-    light.data$ctime <- light.data$ctime - 3600
-  }
-  
-  if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201401 & region_light == "ebs") {
-    print("Correcting 94-201401")
-    light.data$ctime <- light.data$ctime - 3600
-  }
-  
-  if(cast.data$vessel[1] == 162 & cast.data$cruise[1] == 201101 & region_light == "ebs") {
-    print("Correcting 162-201101")
-    light.data$ctime <- light.data$ctime - (3600*8)
-  }
+  # if(cast.data$cruise[1] == 201601 & region_light == "ebs") {
+  #   print("Correcting 2016")
+  #   light.data$ctime <- light.data$ctime + 3600 # Time off by 1 hour
+  # }
+  # 
+  # if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201501 & region_light == "ebs") {
+  #   print("Correcting 94-201501")
+  #   light.data$ctime <- light.data$ctime - 3600
+  # }
+  # 
+  # if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201401 & region_light == "ebs") {
+  #   print("Correcting 94-201401")
+  #   light.data$ctime <- light.data$ctime - 3600
+  # }
+  # 
+  # if(cast.data$vessel[1] == 162 & cast.data$cruise[1] == 201101 & region_light == "ebs") {
+  #   print("Correcting 162-201101")
+  #   light.data$ctime <- light.data$ctime - (3600*8)
+  # }
   
   if(cast.data$vessel[1] == 134 & cast.data$cruise[1] == 200601 & region_light == "ebs") {
     print("Correcting 134-200601")

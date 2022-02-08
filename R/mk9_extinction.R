@@ -49,13 +49,13 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	## get Light (MK9) data
 	print("reading trawl-mounted MK9 file...")
 
-	files.in.dir <- list.files(path = light.loc)
+	files.in.dir <- list.files(path = light.loc, pattern = ".csv")
 	file.idx1 <- which(substr(files.in.dir, 1, 4) == "trwl")
 
 	## read in trawl-mounted light meter data (there could be more than one file)
 	for (file in file.idx1) {
 		assign(paste("trwl", file, sep = ""),
-		read.csv(paste(light.loc, "/", files.in.dir[file], sep= "" ), header = F))
+		read.csv(paste(light.loc, "/", files.in.dir[file], sep= "" ), header = F, skip = 1))
 		}
 
 	if(cruise <= 201801){
@@ -110,7 +110,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	
 	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 
-	                                      try.offsets = seq(-8,8,0.5), 
+	                                      try.offsets = c(seq(-8,8,0.5),0.25,-0.25), 
 	                                      results.file = paste0(light.loc, "/offset_step1_log.txt"))
 
 	## identify offsets file and read in (there should be just one)
@@ -159,7 +159,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	## also compute extinction coefficients for down and upcasts and assign them to global positioning coordinates
 	for(h in sort(haullist$haul)) {
 
-		print(h)
+		# print(h)
 		## subset data by haul
 		haultime <- haullist[haullist$haul == h,c("starttime","haul.end","a","b","offset")]
 		## get smaller subset of data between start and end times
@@ -203,7 +203,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 		fb.pos <- sgt[sgt$haul == h & sgt$time_flag == 7, c("longitude","latitude")]
 
 		if(length(down[,1]) == 0){
-			down.cast.extinct = NA
+			dn.cast.extinct = NA
 		} else{
 			# get light intercept from light regressed on depth
 			down.coef <- lm(llight ~ cdepth, data = down)

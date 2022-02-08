@@ -5,9 +5,10 @@
 #' @param channel Oracle connection as an RODBC connection object.
 #' @param survey RACE survey code as a character vector.
 #' @param light_data_root Filepath to the data source
+#' @param ... Additional arguments passed to trawllight:::tlu_prep_dir_list. Used to remove special projects directories from 2021 tag comparison project (Haehn, Laman, Rohan).
 #' @export
 
-tlu_setup_dir <- function(channel = NULL, survey, light_data_root = "G:/RACE_LIGHT/LightData/Data") {
+tlu_setup_dir <- function(channel = NULL, survey, light_data_root = "G:/RACE_LIGHT/LightData/Data", ...) {
   
   if(!(survey %in% c("BS", "NBS", "GOA", "AI"))) {
     stop(paste0("survey selection, ", survey, " invalid. Must be 'BS', 'NBS', 'GOA', or 'AI'."))
@@ -37,6 +38,6 @@ tlu_setup_dir <- function(channel = NULL, survey, light_data_root = "G:/RACE_LIG
                                  survey = survey)
   
   trawllight:::tlu_prep_dir_list(survey = survey,
-                                light_data_root = light_data_root)
+                                light_data_root = light_data_root, ...)
   
 }
