@@ -19,12 +19,12 @@ Create a new directory for processing data.
 library(trawllight)
 
 channel <- trawllight:::get_connected(schema = "AFSC")
-vessel <- 94 # Replace with vessel
-cruise <- 202101 # Replace with cruise
-survey <- "BS" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
+vessel <- 162 # Replace with vessel
+cruise <- 201902 # Replace with cruise
+survey <- "NBS" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
 
 # Setup directory
-source_path <- "G:/RACE_LIGHT/LightData/Data/year_21/ebs/v_94_oldtags/" # Replace with the source directory
+source_path <- "G:/RACE_LIGHT/LightData/Data/year_19/nbs/v_162/" # Replace with the source directory
 trawllight::mk9_setup_dir(source_path = source_path,
                           overwrite = TRUE,
                           survey = survey,
@@ -33,7 +33,7 @@ trawllight::mk9_setup_dir(source_path = source_path,
 ```
 ## 2. Decode .wch file
 
-Use WC-DAP software to decode binary (.wch) files and setup input csv files, as described in [0_decode_mk9.Md](/0_decode_mk9.Md).
+Use WC-DAP software to decode binary (.wch) files and setup input csv files, as described in [decode_mk9_wcdap.Md](/decode_mk9_wcdap.Md).
 
 ## 3. Offset
 
