@@ -19,12 +19,12 @@ Create a new directory for processing data.
 library(trawllight)
 
 channel <- trawllight:::get_connected(schema = "AFSC")
-vessel <- 162 # Replace with vessel
-cruise <- 201902 # Replace with cruise
-survey <- "NBS" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
+vessel <- 94 # Replace with vessel
+cruise <- 201601 # Replace with cruise
+survey <- "BS" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
 
 # Setup directory
-source_path <- "G:/RACE_LIGHT/LightData/Data/year_19/nbs/v_162/" # Replace with the source directory
+source_path <- "G:/RACE_LIGHT/LightData/Data/year_16/ebs/v_94/" # Replace with the source directory
 trawllight::mk9_setup_dir(source_path = source_path,
                           overwrite = TRUE,
                           survey = survey,
@@ -62,6 +62,15 @@ trawllight::mk9_extinction(channel = channel,
                        vessel = vessel)
 ```
 
-## 6. Move to storage
+## 6. Calculate surface offset
+
+```{r surfaceoffset}
+trawllight::mk9_find_surface_offset(channel = channel, 
+                                    survey = survey,
+                                    cruise = cruise,
+                                    vessel = vessel)
+```
+
+## 7. Move to storage
 
 Move the processed files to the storage directory.

@@ -33,7 +33,7 @@ Outputs of the function are rds files in the output directory that contains binn
 
 ```{r getcasts, include=TRUE, eval=FALSE}
 trawllight::tlu_get_casts(
-  directory_structure = read.csv(file = here::here("imports", "directories.csv")),
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[9:10,]),
   survey = survey,
   cast.dir = "downcast",
   time.buffer = 20,
@@ -43,7 +43,7 @@ trawllight::tlu_get_casts(
   agg.fun = trawllight::geometric.mean)
 
 trawllight::tlu_get_casts(
-  directory_structure = read.csv(file = here::here("imports", "directories.csv")),
+  directory_structure = data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[9:10,]),
   survey = survey,
   cast.dir = "upcast",
   time.buffer = 20,
@@ -61,7 +61,7 @@ Function arguments below (time.buffer=30, agg.fun=trawllight::geometric.mean) ar
 
 ```{r getsurface, include=TRUE, eval=FALSE}
 trawllight::tlu_get_surface(
-  data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[1:12,]),
+  data.frame(path = read.csv(file = here::here("imports", "directories.csv"))[9:10,]),
   survey = survey, 
   time.buffer = 30, 
   agg.fun = trawllight::geometric.mean)
