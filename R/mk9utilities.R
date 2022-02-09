@@ -59,8 +59,6 @@ mk9_find_offset <- function(light, mbt, try.offsets = seq(-8,8,0.5), results.fil
     try.cor[i] <- cor_i
   }
   
-  print(paste0("Offset for Mk9 is " , try.offsets[which.max(try.cor)], " hrs, with correlation between Mk9 and MBT depth of ", try.cor[which.max(try.cor)], "."))
-  
   # Remove try column
   light <- light[,-which(colnames(light) == "ldate_time_offset")]
   
@@ -74,6 +72,8 @@ mk9_find_offset <- function(light, mbt, try.offsets = seq(-8,8,0.5), results.fil
     best_offset <- 0
   }
 
+  print(paste0("Offset for Mk9 is " , best_offset, " hrs, with correlation between Mk9 and MBT depth of ", try.cor[try.offsets == best_offset], "."))
+  
   # Write offset and correlation to .txt file
   if(!is.null(results.file)) {
     fconn <- file(results.file)
