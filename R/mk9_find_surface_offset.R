@@ -106,7 +106,9 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
                                                            lon = sample_surf_light$longitude, 
                                                            withinput = FALSE)$PAR
       
-      offset_cor[kk] <- cor(sample_surf_light$ac_PAR, sample_surf_light$llight)
+      offset_cor[kk] <- cor(sample_surf_light$ac_PAR, 
+                            trawllight::convert_light(sample_surf_light$llight, 
+                                                      convert.method = "wc"))
       
     }
     
@@ -117,7 +119,7 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
     plot(try_offsets, offset_cor, xlab = "Offset (hrs)", 
          ylab = "Correlation", 
          ylim = c(0,1),
-         main = paste0("Cruise: ", casttimes$cruise[1], "Vessel: ", casttimes$vessel[1]))
+         main = paste0("Cruise: ", casttimes$cruise[1], ", Vessel: ", casttimes$vessel[1]))
     abline(v = best_offset, lty = 2)
     points(best_offset, best_cor, col = "red", pch = 16)
     dev.off()

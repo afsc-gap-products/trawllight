@@ -183,7 +183,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	pdf(file = paste0(light.loc, "/plot_offset_by_haul.pdf"), onefile = TRUE)
 	# plot offsets by haul
 	plot(offset ~ haul.time, col = "darkblue", main = "MK9 time offset from MBT \nacross survey", 
-		xlab = "time (haul start)", ylab = "offset (seconds)", ylim = c(0.5, 1))
+		xlab = "time (haul start)", ylab = "offset (seconds)", ylim = c(-20, 20))
 	# use local polynomial smoothing across all hauls to get smoothed trend line for offsets over cruise
 	# weights are keyed to max.rsqr, span controls the degree of smoothing
 	smooth <- try(predict(loess(offset ~ as.numeric(haul.time), weights = ifelse(max.rsqr > .85, max.rsqr^10, 0), 
