@@ -106,6 +106,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	b = vector(length = length(haullist))
 
 	# by haul loop to adjust ldepth to MBT DEPTH
+	print("mk9_time_offset: Adjusting ldepth to TDR depth")
 	i = 2
 	for (i in 1:length(haullist)) {
 	
