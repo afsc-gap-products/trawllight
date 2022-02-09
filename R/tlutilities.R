@@ -137,7 +137,7 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   
   for(t in 1:length(dir.structure)) {
-  
+    
     # Check for CastTimes
     if(!file.exists(paste(dir.structure[t], "/CastTimes.csv", sep = ""))) {
       print(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.structure[t])))
@@ -174,47 +174,48 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
               deck.data <- rbind(deck.data, add.deck)
             }
           }
-        }
-        # Convert times into POSIXct
-        deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
-      }
-
-        
-        # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
-        cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
-                                                         format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        cast.times$downcast_end <- as.POSIXct(strptime(cast.times$downcast_end,
-                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        cast.times$upcast_start <- as.POSIXct(strptime(cast.times$upcast_start,
-                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
-                                                     format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        
-        if(adjust.time & !deck.exists) {
-          # Correct cases where there is a mismatch between survey time and tag time
-          deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
-                                                         cast.data = cast.times,
-                                                         survey = survey)
-        }
-        if(nrow(deck.data) > 0) {
+          # Convert times into POSIXct
+          deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
           
-          # Find surface measurements
-          surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
-                                                             cast.data = cast.times,
-                                                             ...)
-          if(is.null(surface.output)) {
+          
+          # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
+          cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
+                                                           format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          cast.times$downcast_end <- as.POSIXct(strptime(cast.times$downcast_end,
+                                                         format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          cast.times$upcast_start <- as.POSIXct(strptime(cast.times$upcast_start,
+                                                         format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
+                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          
+          if(adjust.time & !deck.exists) {
+            # Correct cases where there is a mismatch between survey time and tag time
+            deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
+                                                           cast.data = cast.times,
+                                                           survey = survey)
+          }
+          if(nrow(deck.data) > 0) {
             
-            surface.output <- surface_profiles
-            
-          } else {
-            if(!is.null(surface_profiles)) {
-              surface.output <- rbind(surface.output, surface_profiles)
+            # Find surface measurements
+            surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
+                                                               cast.data = cast.times,
+                                                               ...)
+            if(is.null(surface.output)) {
+              
+              surface.output <- surface_profiles
+              
+            } else {
+              if(!is.null(surface_profiles)) {
+                surface.output <- rbind(surface.output, surface_profiles)
+              }
+              
             }
-            
           }
         }
       }
+      
     }
+  }
   return(surface.output)
 }
 
