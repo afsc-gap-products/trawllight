@@ -61,7 +61,7 @@ Function arguments below (time.buffer=30, agg.fun=trawllight::geometric.mean) ar
 
 ```{r getsurface, include=TRUE, eval=FALSE}
 trawllight::tlu_get_surface(
-  data.frame(path = here::here("imports", "directories.csv")),
+  directory_structure = read.csv(file = here::here("imports", "directories.csv")),
   survey = survey, 
   time.buffer = 30, 
   agg.fun = trawllight::geometric.mean)
