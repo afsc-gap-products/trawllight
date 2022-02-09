@@ -5,7 +5,7 @@ Version: 3.0.0
 Authors@R: c(person("Sean", "Rohan", email = "sean.rohan@noaa.gov", role = c("aut", "ctb")),
         person("Ned", "Laman", email = "ned.laman@noaa.gov", role = c("aut", "cre")))
 Maintainer: Sean K. Rohan <sean.rohan@noaa.gov>
-Description: Quality control and derive apparent optical properties from irradiance measurements obtained during bottom-trawl surveys using archival tags equipped with a photoelectric cell.
+Description: Quality control and derive apparent optical properties from irradiance measurements obtained during bottom-trawl surveys using trawl-mounted sensors.
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
