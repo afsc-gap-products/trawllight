@@ -66,6 +66,7 @@ tlu_process_all <- function(dir.path,
                                                   bin.gap = bin.gap,
                                                   agg.fun = agg.fun,
                                                   ...)
+          
           atten.out <- trawllight::calculate_attenuation(filtered, light.col = "trans_llight", depth.col = "cdepth", kz.binsize = kz.binsize)
           
           if(!is.null(atten.out)) {
