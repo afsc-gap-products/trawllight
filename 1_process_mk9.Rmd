@@ -19,12 +19,12 @@ Create a new directory for processing data.
 library(trawllight)
 
 channel <- trawllight:::get_connected(schema = "AFSC")
-vessel <- 162 # Replace with vessel
-cruise <- 201101 # Replace with cruise
+vessel <- 94 # Replace with vessel
+cruise <- 202101 # Replace with cruise
 survey <- "BS" # Region ("BS", "NBS", "GOA", "AI", or "SLOPE")
 
 # Setup directory
-source_path <- "G:/RACE_LIGHT/LightData/Data/year_11/ebs/v_162/" # Replace with the source directory
+source_path <- "G:/RACE_LIGHT/LightData/Data/year_19/nbs/v_162/" # Replace with the source directory
 trawllight::mk9_setup_dir(source_path = source_path,
                           overwrite = TRUE,
                           survey = survey,

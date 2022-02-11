@@ -31,37 +31,6 @@ tlu_get_casts <- function(directory_structure = NULL,
     directory_structure <- read.csv(file = here::here("imports", "directories.csv"))
   }
   
-  # Batch load rds
-  .combine_rds_df <- function(sel_dir = here::here("output"), 
-                              pattern,
-                              n_batch = 5) {
-    
-    sel_files <- list.files(sel_dir, 
-                            pattern = pattern,
-                            full.names = TRUE)
-    dat_out <- data.frame()
-    int_index <- 1
-    kk_iter <- length(sel_files)
-    
-    for(kk in 1:kk_iter) {
-      dat_in <- try(readRDS(sel_files[kk]), silent = TRUE)
-      
-      if(class(dat_in) != "try-error") {
-        dat_out <- dplyr::bind_rows(dat_out, dat_in)
-      }
-      
-      if(kk == n_batch || kk == kk_iter) {
-        assign(x = paste0(pattern, "_", int_index), value = dat_out)
-        dat_out <- data.frame()
-        int_index <- int_index + 1
-      }
-    }
-    
-    return(do.call(dplyr::bind_rows, 
-                   mget(objects(pattern = pattern))))
-    
-  }
-  
   for(jj in 1:nrow(directory_structure)) {
     
     # Condition in case processing stops in the middle due to missing files in source path
@@ -88,10 +57,10 @@ tlu_get_casts <- function(directory_structure = NULL,
   }
   
   print("tlu_get_casts: combining temp rds files from output")
-  out_list <- list(light_ratios = .combine_rds_df(pattern = "temp_od", n_batch = 5),
-                   atten_values = .combine_rds_df(pattern = "temp_kd", n_batch = 5),
-                   loess_eval = .combine_rds_df(pattern = "temp_loess", n_batch = 5),
-                   resid_fit = .combine_rds_df(pattern = "temp_resid", n_batch = 5))
+  out_list <- list(light_ratios = trawllight:::.combine_rds_df(pattern = "temp_od", n_batch = 5),
+                   atten_values = trawllight:::.combine_rds_df(pattern = "temp_kd", n_batch = 5),
+                   loess_eval = trawllight:::.combine_rds_df(pattern = "temp_loess", n_batch = 5),
+                   resid_fit = trawllight:::.combine_rds_df(pattern = "temp_resid", n_batch = 5))
   
   print(paste0("tlu_get_casts: writing output to ",  out_path))
   saveRDS(out_list, file = out_path)

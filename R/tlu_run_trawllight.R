@@ -18,7 +18,7 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
   
   
   
-  if(!file.exists(here::here("output", paste0("temp_", region_light, "_tag_residuals.rds")))) {
+  if(!file.exists(here::here("output", paste0(region_light, "_tag_residuals.rds")))) {
     print("tlu_run_trawllight: Calculating residuals for flagging archival tag orientation errors.")
     trawllight:::tlu_calc_resids(input = 
                                    readRDS(here::here("output", paste0("temp_", region_light, "_combined_huds.rds")))) |>
@@ -26,7 +26,7 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
                                         indirect.threshold = "auto",
                                         direct.col = "surf_ratio",
                                         indirect.col = "indirect_residual") |>
-      saveRDS(file = here::here("output", paste0("temp_", region_light, "_tag_residuals.rds")))
+      saveRDS(file = here::here("output", paste0(region_light, "_tag_residuals.rds")))
   }
   
   
@@ -53,7 +53,7 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
   
   if(!file.exists(here::here("output", paste0("temp_", region_light, "_filtered_huds.rds")))) {
     print("tlu_run_trawllight: Combining residuals and interpolated HUDS, filtering using QA/QC criteria, and recalculating optical depth for interpolated data.")
-    readRDS(here::here("output", paste0("temp_", region_light, "_tag_residuals.rds"))) |>
+    readRDS(here::here("output", paste0(region_light, "_tag_residuals.rds"))) |>
       trawllight:::tlu_use_casts() |> 
       merge(readRDS(here::here("output", paste0("temp_", region_light, "_interp_huds.rds")))) |>
       trawllight:::tlu_use_casts2() |>

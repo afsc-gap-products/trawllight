@@ -66,6 +66,7 @@ tlu_process_all <- function(dir.path,
                                                   bin.gap = bin.gap,
                                                   agg.fun = agg.fun,
                                                   ...)
+          
           atten.out <- trawllight::calculate_attenuation(filtered, light.col = "trans_llight", depth.col = "cdepth", kz.binsize = kz.binsize)
           
           if(!is.null(atten.out)) {
@@ -137,7 +138,7 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   
   for(t in 1:length(dir.structure)) {
-  
+    
     # Check for CastTimes
     if(!file.exists(paste(dir.structure[t], "/CastTimes.csv", sep = ""))) {
       print(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.structure[t])))
@@ -174,47 +175,48 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
               deck.data <- rbind(deck.data, add.deck)
             }
           }
-        }
-        # Convert times into POSIXct
-        deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
-      }
-
-        
-        # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
-        cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
-                                                         format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        cast.times$downcast_end <- as.POSIXct(strptime(cast.times$downcast_end,
-                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        cast.times$upcast_start <- as.POSIXct(strptime(cast.times$upcast_start,
-                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
-                                                     format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
-        
-        if(adjust.time & !deck.exists) {
-          # Correct cases where there is a mismatch between survey time and tag time
-          deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
-                                                         cast.data = cast.times,
-                                                         survey = survey)
-        }
-        if(nrow(deck.data) > 0) {
+          # Convert times into POSIXct
+          deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
           
-          # Find surface measurements
-          surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
-                                                             cast.data = cast.times,
-                                                             ...)
-          if(is.null(surface.output)) {
+          
+          # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
+          cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
+                                                           format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          cast.times$downcast_end <- as.POSIXct(strptime(cast.times$downcast_end,
+                                                         format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          cast.times$upcast_start <- as.POSIXct(strptime(cast.times$upcast_start,
+                                                         format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
+                                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
+          
+          if(adjust.time & !deck.exists) {
+            # Correct cases where there is a mismatch between survey time and tag time
+            deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
+                                                           cast.data = cast.times,
+                                                           survey = survey)
+          }
+          if(nrow(deck.data) > 0) {
             
-            surface.output <- surface_profiles
-            
-          } else {
-            if(!is.null(surface_profiles)) {
-              surface.output <- rbind(surface.output, surface_profiles)
+            # Find surface measurements
+            surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
+                                                               cast.data = cast.times,
+                                                               ...)
+            if(is.null(surface.output)) {
+              
+              surface.output <- surface_profiles
+              
+            } else {
+              if(!is.null(surface_profiles)) {
+                surface.output <- rbind(surface.output, surface_profiles)
+              }
+              
             }
-            
           }
         }
       }
+      
     }
+  }
   return(surface.output)
 }
 
@@ -394,28 +396,6 @@ tlu_surface_light <- function(light.data, cast.data, time.buffer = 30, agg.fun =
 tlu_time_adjustments <- function(light.data, cast.data, survey) {
   
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
-  
-  # Add vessel/cruise combination corrections for processing.
-  # Offsets for tags set to the wrong time zone
-  # if(cast.data$cruise[1] == 201601 & region_light == "ebs") {
-  #   print("Correcting 2016")
-  #   light.data$ctime <- light.data$ctime + 3600 # Time off by 1 hour
-  # }
-  # 
-  # if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201501 & region_light == "ebs") {
-  #   print("Correcting 94-201501")
-  #   light.data$ctime <- light.data$ctime - 3600
-  # }
-  # 
-  # if(cast.data$vessel[1] == 94 & cast.data$cruise[1] == 201401 & region_light == "ebs") {
-  #   print("Correcting 94-201401")
-  #   light.data$ctime <- light.data$ctime - 3600
-  # }
-  # 
-  # if(cast.data$vessel[1] == 162 & cast.data$cruise[1] == 201101 & region_light == "ebs") {
-  #   print("Correcting 162-201101")
-  #   light.data$ctime <- light.data$ctime - (3600*8)
-  # }
   
   if(cast.data$vessel[1] == 134 & cast.data$cruise[1] == 200601 & region_light == "ebs") {
     print("Correcting 134-200601")
@@ -741,8 +721,8 @@ tlu_use_casts2 <- function(input) {
     subset(input, trans_llight < max(input$trans_llight[input$cdepth == 1 &
                                                           !input$estimate_ref]))
   flag <- rep(F, nrow(input))
-  flag[input$updown == "downcast" & input$downcast == 1] <- T
-  flag[input$updown == "upcast" & input$upcast == 1] <- T
+  flag[input$updown == "downcast" & input$downcast == 1] <- TRUE
+  flag[input$updown == "upcast" & input$upcast == 1] <- TRUE
   return(input[which(flag),])
 }
 
@@ -868,5 +848,43 @@ tlu_calc_summary <- function(survey) {
       readRDS(here::here("output", paste0("temp_", region_light, "_nbod.rds"))), 
       by = c("vessel", "cruise", "haul", "updown", "latitude", "longitude", "haul_type", "bottom_depth")) |>
     saveRDS(here::here("output", paste0(region_light, "_final_stn_vars.rds")))
+  
+}
+
+
+#' Load and combine data frames from multiple .rds files
+#' 
+#' @param sel_dir Directory containing files to combine
+#' @param pattern Character vector to search for in rds file names.
+#' @param n_batch Number of files to combine at a time.
+#' @noRd
+
+.combine_rds_df <- function(sel_dir = here::here("output"), 
+                            pattern,
+                            n_batch = 5) {
+  
+  sel_files <- list.files(sel_dir, 
+                          pattern = pattern,
+                          full.names = TRUE)
+  dat_out <- data.frame()
+  int_index <- 1
+  kk_iter <- length(sel_files)
+  
+  for(kk in 1:kk_iter) {
+    dat_in <- try(readRDS(sel_files[kk]), silent = TRUE)
+    
+    if(class(dat_in) != "try-error") {
+      dat_out <- dplyr::bind_rows(dat_out, dat_in)
+    }
+    
+    if(kk == n_batch || kk == kk_iter) {
+      assign(x = paste0(pattern, "_", int_index), value = dat_out)
+      dat_out <- data.frame()
+      int_index <- int_index + 1
+    }
+  }
+  
+  return(do.call(dplyr::bind_rows, 
+                 mget(objects(pattern = pattern))))
   
 }

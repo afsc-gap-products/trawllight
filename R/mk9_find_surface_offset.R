@@ -15,10 +15,13 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
   channel <- trawllight:::get_connected(channel)
   
   light_dir <- here::here("data", "mk9", survey, cruise, vessel)
+  region_light <- c("ebs", "nbs", "goa", "ai")[match(survey, c("BS", "NBS", "GOA", "AI"))]
   
   offset_cor <- numeric(length = length(try_offsets))
   
-  region_light <- c("ebs", "nbs", "goa", "ai")[match(survey, c("BS", "NBS", "GOA", "AI"))]
+  if(survey == "NBS") {
+    survey <- "BS"
+  }
   
   haul_dat <- RODBC::sqlQuery(channel = channel,
                               query = paste0("select vessel, cruise, haul, stationid, start_latitude, start_longitude, end_latitude, end_longitude, region from racebase.haul where cruise > 200400 and region = '", survey, "'")) |>
@@ -60,10 +63,13 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
     
     if(ncol(deck_dat) == 6) {
       deck_dat <- deck_dat[,3:6]
-      names(deck_dat) <- c("ldepth", "ltemp", "llight", "ctime")
+    } else if(ncol(deck_dat) == 7){
+      deck_dat <- deck_dat[,c(3:5, 7)] 
     } else {
       stop(paste0("mk9_find_surface_offset: Unexpected number of columns (", ncol(deck_dat), "). in deck data from cruise ", casttimes$cruise[1], " vessel ", casttimes$vessel, ". Expected: 6. May need to add processing option for the deck file configuration."))
     }
+    
+    names(deck_dat) <- c("ldepth", "ltemp", "llight", "ctime")
     
     # Convert times into POSIXct
     deck_dat$ctime <- as.POSIXct(strptime(deck_dat$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
@@ -91,56 +97,60 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
       
     }
     
-    for(kk in 1:length(try_offsets)) {
+    if(nrow(sample_surf_light) > 0) {
+      for(kk in 1:length(try_offsets)) {
+        
+        sample_surf_light$ctime_adj_utc <- lubridate::with_tz(sample_surf_light$ctime + try_offsets[kk] * 3600, 
+                                                              tzone = "UTC")
+        
+        sample_surf_light$ac_PAR <- fishmethods::astrocalc4r(day = lubridate::day(sample_surf_light$ctime_adj_utc),
+                                                             month = lubridate::month(sample_surf_light$ctime_adj_utc),
+                                                             year = lubridate::year(sample_surf_light$ctime_adj_utc),
+                                                             hour = lubridate::hour(sample_surf_light$ctime_adj_utc) + 
+                                                               lubridate::minute(sample_surf_light$ctime_adj_utc)/60,
+                                                             timezone = rep(0, nrow(sample_surf_light)),
+                                                             lat = sample_surf_light$latitude,
+                                                             lon = sample_surf_light$longitude, 
+                                                             withinput = FALSE)$PAR
+        
+        offset_cor[kk] <- cor(sample_surf_light$ac_PAR, 
+                              trawllight::convert_light(sample_surf_light$llight, 
+                                                        convert.method = "wc"))
+        
+      }
       
-      sample_surf_light$ctime_adj_utc <- lubridate::with_tz(sample_surf_light$ctime + try_offsets[kk] * 3600, 
-                                                            tzone = "UTC")
+      best_offset <- try_offsets[which.max(offset_cor)]
+      best_cor <- offset_cor[which.max(offset_cor)]
       
-      sample_surf_light$ac_PAR <- fishmethods::astrocalc4r(day = lubridate::day(sample_surf_light$ctime_adj_utc),
-                                                           month = lubridate::month(sample_surf_light$ctime_adj_utc),
-                                                           year = lubridate::year(sample_surf_light$ctime_adj_utc),
-                                                           hour = lubridate::hour(sample_surf_light$ctime_adj_utc) + 
-                                                             lubridate::minute(sample_surf_light$ctime_adj_utc)/60,
-                                                           timezone = rep(0, nrow(sample_surf_light)),
-                                                           lat = sample_surf_light$latitude,
-                                                           lon = sample_surf_light$longitude, 
-                                                           withinput = FALSE)$PAR
+      pdf(file = paste0(light_dir, "/plot_surface_offset.pdf"))
+      plot(try_offsets, offset_cor, xlab = "Offset (hrs)", 
+           ylab = "Correlation", 
+           ylim = c(0,1),
+           main = paste0("Cruise: ", casttimes$cruise[1], ", Vessel: ", casttimes$vessel[1]))
+      abline(v = best_offset, lty = 2)
+      points(best_offset, best_cor, col = "red", pch = 16)
+      dev.off()
       
-      offset_cor[kk] <- cor(sample_surf_light$ac_PAR, 
-                            trawllight::convert_light(sample_surf_light$llight, 
-                                                      convert.method = "wc"))
-      
-    }
-    
-    best_offset <- try_offsets[which.max(offset_cor)]
-    best_cor <- offset_cor[which.max(offset_cor)]
-    
-    pdf(file = paste0(light_dir, "/plot_surface_offset.pdf"))
-    plot(try_offsets, offset_cor, xlab = "Offset (hrs)", 
-         ylab = "Correlation", 
-         ylim = c(0,1),
-         main = paste0("Cruise: ", casttimes$cruise[1], ", Vessel: ", casttimes$vessel[1]))
-    abline(v = best_offset, lty = 2)
-    points(best_offset, best_cor, col = "red", pch = 16)
-    dev.off()
-    
-    # Write offset and correlation to .txt file
-    if(is.null(results_file)) {
-      results_file <- paste0(light_dir, "/log_surface_offset.txt")
-    }
+      # Write offset and correlation to .txt file
+      if(is.null(results_file)) {
+        results_file <- paste0(light_dir, "/log_surface_offset.txt")
+      }
       fconn <- file(results_file)
       writeLines(c(best_offset,
                    as.character(Sys.Date()),
                    paste0("Offset: " , best_offset, " hrs"),
                    paste0("Corr: ", best_cor )),fconn)
       close(fconn)
+      
+      print(paste0("mk9_find_surface_offset: Applying ", best_offset, " hr offset to deck data from cruise ", casttimes$cruise[1], ", vessel ", casttimes$vessel[1], ". Correlation: ", round(best_cor, 3)))
+      deck_dat$ctime <- deck_dat$ctime + 3600 * best_offset
+      
+      print(paste0("mk9_find_surface_offset: Writing time-shifted surface light to ", light_dir, "/corr_deck.csv"))
+      write.csv(x = deck_dat, paste0(light_dir, "/corr_deck.csv"), row.names = FALSE)
+    } else {
+      stop("mk9_find_surface_offset: No surface data found during cast times. Check that deck csv files contain data for the chosen vessel/cruise.")
     }
-
-  
-  print(paste0("mk9_find_surface_offset: Applying ", best_offset, " hr offset to deck data from cruise ", casttimes$cruise[1], ", vessel ", casttimes$vessel[1], ". Correlation: ", round(best_cor, 3)))
-  deck_dat$ctime <- deck_dat$ctime + 3600 * best_offset
-
-  print(paste0("mk9_find_surface_offset: Writing time-shifted surface light to ", light_dir, "/corr_deck.csv"))
-  write.csv(x = deck_dat, paste0(light_dir, "/corr_deck.csv"), row.names = FALSE)
+    
+  }
   
 }

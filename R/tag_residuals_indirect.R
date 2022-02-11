@@ -32,7 +32,7 @@ tag_residuals_indirect <- function(x, formula = log10(trans_llight) ~ s(PAR, bs 
   names(x)[names(x) == time.col] <- "start_time"
   names(x)[names(x) == light.col] <- "trans_llight"
   
-  if(class(x$start_time[1]) == "POSIXct") {
+  if(class(x$start_time[1])[1] == "POSIXct") {
     # Use UTC times for fishmethods::astrocalc4r
     utc_start_time <- lubridate::with_tz(x$start_time, tzone = "UTC")
   }
