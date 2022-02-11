@@ -76,3 +76,11 @@ trawllight::tlu_run_trawllight(rm.temp = TRUE,
                                survey = survey)
 ```
 
+## 5. Retrieve bottom light data
+
+```{r getbottom, include=TRUE, eval=FALSE}
+trawllight::tlu_get_bottom(
+  directory_structure = read.csv(file = here::here("imports", "directories.csv")),
+  survey = survey)
+
+```
