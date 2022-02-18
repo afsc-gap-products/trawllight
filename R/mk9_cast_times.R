@@ -116,7 +116,8 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 	light$date_time <- as.POSIXct(paste(light$V1, light$V2), format = "%m/%d/%Y %H:%M:%S")
 
 	## 2004 and 2005 MK9 data have a different format than subsequent years; here's code to deal with it
-	if(cruise <= 200501){
+	version_flag <- ncol(light) == 6
+	if(cruise <= 200501 & version_flag){
 		light <- light[,3:6]
 		colnames(light) <- c("ldepth","ltemp","llight","ldate_time")
 
@@ -154,7 +155,7 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 		c.depth <- ((haultime$b * light.haul$ldepth) + haultime$a)
 		c.time <- (light.haul$ldate_time + haultime$offset)
 
-		if(cruise <= 200501){
+		if(cruise <= 200501 & version_flag){
 			c.light.dat <- cbind(vch[1], vch[2], vch[3], c.depth, c.time, light.haul$ldepth, light.haul$ltemp, light.haul$llight)
 			light.df <- rbind(c.light.dat, light.df)
 		}else{
