@@ -8,8 +8,6 @@
 
 mk9_convert_wctab <- function(file_path) {
   
-  # file_path <- "G:\\RACE_LIGHT\\LightData\\Data\\year_21\\ebs/v_162/trwl1_1990030.tab"
-  
   file_base_name <- basename(file_path)
   file_dir_name <- dirname(file_path)
   
