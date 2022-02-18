@@ -72,11 +72,12 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
   
   output_bottom_light <- trawllight:::.combine_rds_df(pattern = "temp_bottom_light_", n_batch = 5)
   
-  print(paste0("tlu_get_bottom: writing output to ",  out_path))
-  saveRDS(output_bottom_light, file = out_path)
-  
-  print("tlu_get_bottom: removing temporary rds files from output")
-  file.remove(list.files(here::here("output"), pattern = "temp_bottom_light", full.names = TRUE))
+  loc_dat <- readRDS(file = here::here("output", paste0(region_light, "_tag_residuals.rds"))) |>
+    dplyr::select(vessel, cruise, haul, latitude, longitude, bottom_depth, stationid) |>
+    unique() |>
+    dplyr::group_by(vessel, cruise, haul, bottom_depth, stationid) |>
+    dplyr::summarise(latitude = mean(latitude),
+                     longitude = mean(longitude))
   
   print("tlu_get_bottom: combining bottom light with orientation flags.")
   output_bottom_light <- readRDS(file = here::here("output", paste0(region_light, "_tag_residuals.rds"))) |>
@@ -86,8 +87,14 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
     dplyr::group_by(vessel, cruise, haul) |>
     dplyr::summarise(orientation = mean(orientation), .groups = "keep") |>
     dplyr::ungroup() |>
-    dplyr::right_join(readRDS(file = out_path) |> 
-                        dplyr::select(-ltemp, -ldepth, -lcond, -bottom))
+    dplyr::right_join(output_bottom_light |> 
+                        dplyr::select(-ltemp, -ldepth, -lcond),
+                      by = c("vessel", "cruise", "haul")) |>
+    dplyr::inner_join(loc_dat, 
+                      by = c("vessel", "cruise", "haul"))
+  
+  print(paste0("tlu_get_bottom: writing output to ",  out_path))
+  saveRDS(output_bottom_light, file = out_path)
   
   print(paste0("tlu_get_bottom: writing mean bottom light to ", out_path_mean))
   output_bottom_light |>
@@ -95,11 +102,12 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
     dplyr::summarise(tag_bottom_light = agg_fun(llight),
                      bottom_light = agg_fun(trans_llight),
                      cdepth = mean(cdepth),
-                     orientation = mean(orientation)) |> 
+                     orientation = mean(orientation)) |>
+    dplyr::ungroup() |>
+    dplyr::inner_join(loc_dat, by = c("vessel", "cruise", "haul")) |>
     saveRDS(file = out_path_mean)
-  
-
-  
-  
+    
+    print("tlu_get_bottom: removing temporary rds files from output")
+    file.remove(list.files(here::here("output"), pattern = "temp_bottom_light", full.names = TRUE))
     
 }
