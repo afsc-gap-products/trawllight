@@ -17,7 +17,7 @@ Setup the directory for a survey region (options: "BS", "NBS", "GOA", "AI", "SLO
 
 ```{r setup, include=TRUE, eval=FALSE}
 library(trawllight)
-survey <- "BS"
+survey <- "AI"
 
 trawllight::tlu_setup_dir(survey = "BS", 
                           light_data_root = "G:/RACE_LIGHT/LightData/Data")
