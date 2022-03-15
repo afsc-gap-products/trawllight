@@ -3,7 +3,8 @@ Type: Package
 Title: Derive apparent optical properties from trawl-mounted light sensors
 Version: 3.0.1
 Authors@R: c(person("Sean", "Rohan", email = "sean.rohan@noaa.gov", role = c("aut", "ctb")),
-        person("Ned", "Laman", email = "ned.laman@noaa.gov", role = c("aut", "cre")))
+        person("Ned", "Laman", email = "ned.laman@noaa.gov", role = c("aut", "cre")),
+        person("Stan", "Kotwicki", role = "ctb"))
 Maintainer: Sean K. Rohan <sean.rohan@noaa.gov>
 Description: Quality control and derive apparent optical properties from irradiance measurements obtained during bottom-trawl surveys using trawl-mounted sensors.
 License: GPL (>=2)
