@@ -18,19 +18,17 @@ remotes::install_github("afsc-gap-products/trawllight")
 
 ### Stage 1: Decode
 
-Data need to be decoded using WC-DAP software and reformatted to be compatible with trawllight functions prior to processing. Instructions and code for decoding and reformatting the data are provided in step #2 of [1_process_mk9.Rmd](/1_process_mk9.Rmd).
+Data need to be decoded using WC-DAP software and reformatted to be compatible with trawllight functions prior to processing. Instructions and code for decoding and reformatting the data are provided in step 2 of [1_process_mk9.Rmd](/1_process_mk9.Rmd).
 
 ### Stage 2: Synchronize with TDR
 
-Data are time-matched to survey time and synchronized with depth data from trawl-mounted temperature-depth recorder. Instructions and code for this stage are steps #3-5 in [1_process_mk9.Rmd](/1_process_mk9.Rmd) ([html version](/process_mk9.html)).
+Data are time-matched to survey time and synchronized with depth data from trawl-mounted temperature-depth recorder. Instructions and code for this stage are steps 3-5 in [1_process_mk9.Rmd](/1_process_mk9.Rmd) ([html version](/process_mk9.html)).
 
 ### Stage 3: QA/QC and derive apparent optical properties
 
 Run the trawllight algorithm to apply QA/QC checks to detect orientation errors and calculate apparent optical properties. Instructions and code for this stage are in [2_run_trawllight.Rmd](/2_run_trawllight.Rmd) ([html version])(/2_run_trawllight.html).
 
 ### Stage 4: Generate data products using trawllight
-
-Write data products to netCDF file.
 
 # References
 Rohan, S.K, Kotwicki, S., Britt, L.L., Laman, E.A., and Aydin, K. 2020. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags. U.S. Dep. Commer., NOAA Tech. Memo. NMFS-AFSC-403, 91 p. [https://doi.org/10.25923/42yn-1q79](https://doi.org/10.25923/42yn-1q79)
