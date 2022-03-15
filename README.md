@@ -22,11 +22,11 @@ Data need to be decoded using WC-DAP software and reformatted to be compatible w
 
 ### Stage 2: Synchronize with TDR
 
-Data are time-matched to survey time and synchronized with depth data from trawl-mounted temperature-depth recorder. Instructions and code for this stage are steps 3-5 in [1_process_mk9.Rmd](/1_process_mk9.Rmd) ([html version](/process_mk9.html)).
+Data are time-matched to survey time and synchronized with depth data from trawl-mounted temperature-depth recorder. Instructions and code for this stage are steps 3-5 in [1_process_mk9.Rmd](/1_process_mk9.Rmd).
 
 ### Stage 3: QA/QC and derive apparent optical properties
 
-Run the trawllight algorithm to apply QA/QC checks to detect orientation errors and calculate apparent optical properties. Instructions and code for this stage are in [2_run_trawllight.Rmd](/2_run_trawllight.Rmd) ([html version])(/2_run_trawllight.html).
+Run the trawllight algorithm to apply QA/QC checks to detect orientation errors and calculate apparent optical properties. Instructions and code for this stage are in [2_run_trawllight.Rmd](/2_run_trawllight.Rmd).
 
 ### Stage 4: Generate data products using trawllight
 
