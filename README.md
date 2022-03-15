@@ -26,7 +26,7 @@ Data are time-matched to survey time and synchronized with depth data from trawl
 
 ### Stage 3: QA/QC and derive apparent optical properties
 
-Run the trawllight algorithm to apply QA/QC checks to detect orientation errors and calculate apparent optical properties. Instructions and code for this stage are in [2_run_trawllight.Rmd](/2_run_trawllight.Rmd) ([html version](/2_run_trawllight.html).
+Run the trawllight algorithm to apply QA/QC checks to detect orientation errors and calculate apparent optical properties. Instructions and code for this stage are in [2_run_trawllight.Rmd](/2_run_trawllight.Rmd) ([html version])(/2_run_trawllight.html).
 
 ### Stage 4: Generate data products using trawllight
 
