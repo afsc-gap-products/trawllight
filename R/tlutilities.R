@@ -178,6 +178,10 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
           # Convert times into POSIXct
           deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
           
+          if(is.na(deck.data$ctime[1])) {
+            stop(paste(dir.structure[t], "date format not recognized! (", deck.data$ctime, " >>> ", deck.data$ctime[1], ")" , sep = ""))
+          }
+          
           
           # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
           cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
