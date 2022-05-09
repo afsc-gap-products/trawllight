@@ -3,7 +3,7 @@
 # trawllight
 The trawllight R package contains functions to implement an algorithm that derives apparent optical properties from light measurements collected during NOAA Alaska Fisheries Science Center bottom-trawl surveys using trawl-mounted archival tags. A description of the light data collection protocol, algorithm subroutines, and algorithm performance is provided in Rohan et al. (2020) and Rohan et al. (2021).
 
-
+<br><br>
 ![](./assets/transect_S_2011_2017_wide.png)
 
 <i>Transect along 60°N on the eastern Bering Sea shelf in 2017 showing the downwelling diffuse attenuation coefficient <i>K<sub>d</sub></i>(<i>z, tag</i>), mixed layer depth (MLD), bottom layer depth (BLD), and depth where downwelling irradiance is equal to 10% of irradiance and just beneath the sea surface (Z<sub>10%</sub>, i.e., optical depth = 2.3).
@@ -18,21 +18,11 @@ require(remotes)
 remotes::install_github("afsc-gap-products/trawllight")
 ```
 
-# Data processing
+# Documentation
 
-### Stage 1: Decode
-
-Data need to be decoded using WC-DAP software and reformatted to be compatible with trawllight functions prior to processing. Instructions and code for decoding and reformatting the data are provided in step 2 of [1_process_mk9.Rmd](/1_process_mk9.Rmd).
-
-### Stage 2: Synchronize with TDR
-
-Data are time-matched to survey time and synchronized with depth data from trawl-mounted temperature-depth recorder. Instructions and code for this stage are steps 3-5 in [1_process_mk9.Rmd](/1_process_mk9.Rmd).
-
-### Stage 3: QA/QC and derive apparent optical properties
-
-Run the trawllight algorithm to apply QA/QC checks to detect orientation errors and calculate apparent optical properties. Instructions and code for this stage are in [2_run_trawllight.Rmd](/2_run_trawllight.Rmd).
-
-### Stage 4: Generate data products using trawllight
+- [Decode and synchronize data](1_process_mk9.Rmd)
+- [Run trawllight: QA/QC and derive apparent optical properties](2_run_trawllight.Rmd)
+- [Generate data prodcts](3_make_data_product.Rmd)
 
 # References
 Rohan, S.K, Kotwicki, S., Britt, L.L., Laman, E.A., and Aydin, K. 2020. Deriving apparent optical properties from light measurements obtained using bottom-trawl-mounted archival tags. U.S. Dep. Commer., NOAA Tech. Memo. NMFS-AFSC-403, 91 p. [https://doi.org/10.25923/42yn-1q79](https://doi.org/10.25923/42yn-1q79)
