@@ -3,7 +3,17 @@
 # trawllight
 The trawllight R package contains functions to implement an algorithm that derives apparent optical properties from light measurements collected during NOAA Alaska Fisheries Science Center bottom-trawl surveys using trawl-mounted archival tags. A description of the light data collection protocol, algorithm subroutines, and algorithm performance is provided in Rohan et al. (2020) and Rohan et al. (2021).
 
-The most recent version of the trawllight package was built in R 4.1.1.
+
+![](./assets/transect_S_2011_2017_wide.png)
+
+<i>Transect along 60°N on the eastern Bering Sea shelf in 2017 showing the downwelling diffuse attenuation coefficient <i>K<sub>d</sub></i>(<i>z, tag</i>), mixed layer depth (MLD), bottom layer depth (BLD), and depth where downwelling irradiance is equal to 10% of irradiance and just beneath the sea surface (Z<sub>10%</sub>, i.e., optical depth = 2.3). See [Rohan et al. (2021)](https://doi.org/10.1016/j.pocean.2021.102554).</i>
+
+
+Average mixed layer depth and Z<sub>10%</sub> on the eastern Bering Sea continental shelf during summers (late May-early August) 2004 to 2017. See [Rohan et al. (2021)](https://doi.org/10.1016/j.pocean.2021.102554).
+
+
+Near-bottom optical depth (i.e., optical depth ~2.5 m above the seafloor) in the eastern Bering Sea during summers 2004 to 2017. Increments of 2.303 correspond with an order of magnitude difference in downwelling irradiance. See [Rohan et al. (2021)](https://doi.org/10.1016/j.pocean.2021.102554).
+
 
 # Installation
 
