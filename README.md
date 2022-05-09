@@ -8,7 +8,6 @@ The trawllight R package contains functions to implement an algorithm that deriv
 
 <i>Transect along 60°N on the eastern Bering Sea shelf in 2017 showing the downwelling diffuse attenuation coefficient <i>K<sub>d</sub></i>(<i>z, tag</i>), mixed layer depth (MLD), bottom layer depth (BLD), and depth where downwelling irradiance is equal to 10% of irradiance and just beneath the sea surface (Z<sub>10%</sub>, i.e., optical depth = 2.3).
 
-
 # Installation
 
 trawllight can be installed by starting R and running the following code. Installation requires the devtools package.
