@@ -7,9 +7,10 @@
 radtran(
   latitude,
   longitude,
-  doy,
-  hour,
-  minute,
+  zenith_degrees = NULL,
+  doy = NULL,
+  hour = NULL,
+  minute = NULL,
   alpha,
   surface_pressure,
   water_vapor = NA,
@@ -33,11 +34,13 @@ radtran(
 
 \item{longitude}{Longitude in decimal degrees (North is positive, South is negative)}
 
-\item{doy}{Day of year (numeric vector of length 1 with a values of 1-365)}
+\item{zenith_degrees}{Solar zenith angle in degrees. Pass either externally provided zenith_degrees or hour, and minute. Default = NULL.}
 
-\item{hour}{Local hour}
+\item{doy}{Day of year (numeric vector of length 1 with a values of 1-365).}
 
-\item{minute}{Local minute}
+\item{hour}{Local hour. Not used of zenith_degrees is provided.}
+
+\item{minute}{Local minute. Not used of zenith_degrees is provided.}
 
 \item{alpha}{Power on angstrom turbidity expression}
 
