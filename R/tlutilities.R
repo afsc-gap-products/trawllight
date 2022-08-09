@@ -132,7 +132,7 @@ tlu_process_all <- function(dir.path,
 #' @noRd
 
 tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...) {
-  
+
   surface.output <- NULL
   
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
@@ -161,6 +161,7 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
         # Check for CastTimes
         if(length(deck.files) < 1) {
           warning(paste("process_all_surface: Deck light measurements not found in" , paste(dir.structure[t])))
+          next
         } else {
           
           #Import first deck file
@@ -182,6 +183,8 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
             stop(paste(dir.structure[t], "date format not recognized! (", deck.data$ctime, " >>> ", deck.data$ctime[1], ")" , sep = ""))
           }
           
+        }
+      }
           
           # Convert cast times to POSIXct format, add 30 second offset to each cast time to avoid truncating cast data
           cast.times$downcast_start <- as.POSIXct(strptime(cast.times$downcast_start,
@@ -216,9 +219,6 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
               
             }
           }
-        }
-      }
-      
     }
   }
   return(surface.output)

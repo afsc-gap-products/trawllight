@@ -43,7 +43,8 @@ tlu_get_casts <- function(directory_structure = NULL,
         silent = silent,
         binsize = bin.size,
         bin.gap = bin.gap,
-        agg.fun = agg.fun)
+        agg.fun = agg.fun, 
+        ...)
       
       
       if(!is.null(cast_dat)) {

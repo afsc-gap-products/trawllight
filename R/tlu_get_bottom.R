@@ -60,7 +60,7 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
     bottom_light_df <- subset(light_data, is.na(bottom) == F)
     
     # Calculate geometric mean near-bottom light
-    bottom_light_df$trans_llight <- trawllight::convert_light(bottom_light_df$llight, convert.method = "kotwicki")
+    bottom_light_df$trans_llight <- trawllight::convert_light(bottom_light_df$llight, ...)
   
     if(!is.null(bottom_light_df)) {
       saveRDS(bottom_light_df, file = here::here("output", paste0("temp_bottom_light_", ii, ".rds")))
