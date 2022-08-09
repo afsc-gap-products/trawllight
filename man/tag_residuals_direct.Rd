@@ -6,8 +6,7 @@
 \usage{
 tag_residuals_direct(
   x,
-  formula = log10(trans_llight) ~ log10(surf_trans_llight) + interaction(vessel,
-    cruise),
+  formula = log10(trans_llight) ~ log10(surf_trans_llight) + interaction(vessel, cruise),
   water.col = "trans_llight",
   surface.col = "surf_trans_llight",
   depth.col = "cdepth",

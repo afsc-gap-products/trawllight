@@ -13,14 +13,16 @@ make_aop_ncdf(
     "Rohan, S.K., Kotwicki, S., Kearney, K.A., Schulien, J.A., Laman, E.A., Cokelet, E.D., Beauchamp, D.A., Britt, L.L., Aydin, K.Y., & Zador, S.G. (2021). Using bottom trawls to monitor subsurface water clarity in marine ecosystems. Progress in Oceanography, 194, 102554. https://doi.org/10.1016/j.pocean.2021.102554",
     id = "https://doi.org/10.5281/zenodo.3688864", cdm_data_type = "Point", cruise =
     "2021 Eastern Bering Sea Continental Shelf and Northern Bering Sea Bottom-Trawl Surveys",
-         institution = "NOAA Alaska Fisheries Science Center", contributor_name =
+    
+     institution = "NOAA Alaska Fisheries Science Center", contributor_name =
     "Rebecca Haehn, Ned Laman", creator_name = "Sean Rohan", creator_institution =
     "NOAA Alaska Fisheries Science Center", creator_email = "sean.rohan@noaa.gov",
     publisher = "NOAA Alaska Fisheries Science Center", publisher_type = "institution",
     publisher_url =
     "https://www.fisheries.noaa.gov/about/alaska-fisheries-science-center",
     geospatial_bounds_crs = "EPSG:4326", license =
-    "http://www.usa.gov/publicdomain/label/1.0/", instrument = "Archival Tag",     
+    "http://www.usa.gov/publicdomain/label/1.0/", instrument = "Archival Tag", 
+    
     Conventions = "CF-1.8", standard_name_vocabulary = "CF Standard Name Table v79",
     source = paste0("Data processed using trawllight ", packageVersion(pkg =
     "trawllight")))
