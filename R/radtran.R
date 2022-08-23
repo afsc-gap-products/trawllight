@@ -48,9 +48,9 @@ radtran <- function(latitude, longitude, zenith_degrees = NULL, doy = NULL, hour
   # Numbers in parentheses correspond with equations in Gregg and Carder (1990) 
   
   # Photon flux constant
-  CONST <- (1/(6.626176e-34*299792458))*10^-10
+  CONST <- (1/(6.626176e-34*299792458))*1e-6
   
-  # Wavelength (um)
+  # Wavelength (nm)
   wavelengths <- c(350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 
            368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 
            386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 
@@ -74,7 +74,7 @@ radtran <- function(latitude, longitude, zenith_degrees = NULL, doy = NULL, hour
   w_v_index <- which(wavelengths %in% w_v)
   w_v <- wavelengths[w_v_index]/1000
   
-  # Extraterrestrial solar radiation W m^-2 um^-1)
+  # Extraterrestrial solar radiation W m^-2 nm^-1)
   if(is.na(e_v)) {
     e_v <- c(0.961, 0.953, 0.949, 1.056, 1.122, 1.078, 1.047, 0.879, 0.752, 0.919, 1.062, 1.054, 1.047, 
              1.024, 0.998, 1.108, 1.259, 1.221, 1.156, 1.184, 1.197, 1.162, 1.144, 1.027, 0.953, 1.004, 
@@ -461,10 +461,10 @@ radtran <- function(latitude, longitude, zenith_degrees = NULL, doy = NULL, hour
   direct_subsurface_pfd <- w_v * direct_subsurface_wm2 * CONST
   
   return(data.frame(wavelength = w_v,
-                    direct_surface_pfd = direct_surface_pfd, 
-                    direct_subsurface_pfd = direct_subsurface_pfd,
-                    diffuse_surface_pfd = diffuse_surface_pfd,
-                    diffuse_subsurface_pfd = diffuse_subsurface_pfd,
+                    direct_surface_pfd_nm = direct_surface_pfd, 
+                    direct_subsurface_pfd_nm = direct_subsurface_pfd,
+                    diffuse_surface_pfd_nm = diffuse_surface_pfd,
+                    diffuse_subsurface_pfd_nm = diffuse_subsurface_pfd,
                     direct_surface_wm2_nm = direct_surface_wm2,
                     direct_subsurface_wm2_nm = direct_subsurface_wm2,
                     diffuse_surface_wm2_nm = diffuse_surface_wm2,
