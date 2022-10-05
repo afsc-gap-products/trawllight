@@ -23,7 +23,8 @@ mk9_setup_dir <- function(source_path, survey, cruise, vessel, overwrite = FALSE
     dir.create(here::here("data", "mk9", survey, cruise, vessel), recursive = TRUE)
     
     file.copy(list.files(source_path, full.names = TRUE), 
-              to = here::here("data", "mk9", survey, cruise, vessel))
+              to = here::here("data", "mk9", survey, cruise, vessel),
+              overwrite = overwrite)
   }
 
 }
