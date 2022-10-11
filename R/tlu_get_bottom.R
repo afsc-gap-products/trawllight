@@ -24,6 +24,11 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
     light_path = paste0(directory_structure[ii, ], "/corr_MK9hauls.csv")
     casttimes_path = paste0(directory_structure[ii, ], "/CastTimes.csv")
     
+    if(!file.exists(light_path)) {
+      message("tlu_get_bottom: Bottom light file does not exist. Skipping", light_path)
+      next
+    }
+    
     # Import light files from directory
     print(paste0("tlu_bottom_light: Loading ", light_path))
     light_data <- read.csv(light_path)
