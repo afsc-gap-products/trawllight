@@ -106,8 +106,13 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	} else {
 		  stop(paste0("extinction: Unexpected number of columns, (", ncol(light), ") in light data csv. Expected 6 or 7."))
 	}
-	
-	light <- trawllight:::mk9_lowpass_filter(x = light, vessel = vessel, cruise = cruise)
+
+	if(vessel == 162 & cruise %in% c(202201, 202202)) {
+	  
+	  light$ldepth <- trawllight:::mk9_lowpass_filter(x = light$ldepth, 
+	                                                  vessel = vessel, 
+	                                                  cruise = cruise)
+	}
 	
 	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 

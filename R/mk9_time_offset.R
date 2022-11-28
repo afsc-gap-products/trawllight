@@ -9,12 +9,6 @@
 #' @export
 
 mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
-  
-  ######
-  # vessel = 162
-  # cruise = 202201
-  # survey = "BS"
-  ######
 
   channel <- trawllight:::get_connected(channel = channel)
   
@@ -87,14 +81,13 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	  stop("Check number of columns in mk9_corr and create new value in time_offset()")
 	}
 	
-	light <- trawllight:::mk9_lowpass_filter(x = light, vessel = vessel, cruise = cruise)
-
-	# ldepth = MK9 depth
-	# ltemp = MK9 temperature
-	# llight = MK9 raw photon count number
-	# lcond = MK9 conductivity
-	# ldate_time = light$date_time from above
-
+	if(vessel == 162 & cruise %in% c(202201, 202202)) {
+	  
+	  light$ldepth <- trawllight:::mk9_lowpass_filter(x = light$ldepth, 
+	                                                  vessel = vessel, 
+	                                                  cruise = cruise)
+	}
+	
 	print(paste0("mk9_time_offset: ", "Creating haul list from event files where there is an On Bottom event."))
 	# creates haul list from event files where there is an On Bottom event
 	haullist <- sgt$haul[which(sgt$time_flag == 3)]

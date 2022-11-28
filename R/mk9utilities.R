@@ -431,8 +431,6 @@ mk9_get_regr <- function(survey, vessel, cruise, channel = NULL){
 #' @noRd
 
 mk9_lowpass_filter <- function(x, vessel, cruise) {
-  
-  if(vessel == 162 & cruise %in% c(202201, 202202)) {
     
     lp_filter <- function(var, tc, freq_n) {
       
@@ -449,7 +447,7 @@ mk9_lowpass_filter <- function(x, vessel, cruise) {
       return(new_var)
     }
     
-    in_var <- x$ldepth
+    in_var <- x
     
     pass_1 <- lp_filter(var = in_var,
                         tc = 4,
@@ -458,8 +456,7 @@ mk9_lowpass_filter <- function(x, vessel, cruise) {
                         tc = 4,
                         freq_n = 1)
     
-    x$ldepth <- rev(pass_2)
-  }
+    x <- rev(pass_2)
   
   return(x)
 }
