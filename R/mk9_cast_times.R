@@ -17,7 +17,6 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 	year = floor(cruise/100)
 
 	## this code points to the text file named to utilize functions stored there
-	# source('get.BT.SGT.Haul.R')
 	## RACE data (either in RACEEDIT or RACEDATA)
 	print("getting supporting data...")
 
@@ -136,6 +135,8 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 		df.names <- names(light.df)
 	}
 	
+	light <- trawllight:::mk9_lowpass_filter(x = light, vessel = vessel, cruise = cruise)
+	
 	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 
 	                                      try.offsets = c(seq(-8,8,0.5),0.25,-0.25), 
@@ -227,8 +228,6 @@ mk9_cast_times <- function(channel = NULL, survey, vessel, cruise){
 
 	print("creating CastTimes table...")
 	for(h in sort(mk9.good.hauls$haul)){
-
-		# print(h)
 
 		mbt.sub <- mbt[mbt$haul == h, c("date_time","depth")]
 		ob.sub <- ob.int[ob.int$haul == h, ]

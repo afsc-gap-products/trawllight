@@ -1,7 +1,7 @@
 Package: trawllight
 Type: Package
 Title: Derive apparent optical properties from trawl-mounted light sensors
-Version: 3.1.4
+Version: 3.1.5
 Authors@R: c(person("Sean", "Rohan", email = "sean.rohan@noaa.gov", role = c("aut", "ctb")),
         person("Ned", "Laman", email = "ned.laman@noaa.gov", role = c("aut", "cre")),
         person("Stan", "Kotwicki", role = "ctb"))

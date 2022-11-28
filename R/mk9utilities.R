@@ -419,3 +419,47 @@ mk9_get_regr <- function(survey, vessel, cruise, channel = NULL){
   return(coef)
   
 }
+
+
+#' Internal. Low pass filter malfunctioning MK9
+#' 
+#' Lowpass filter to fix malfunctioning 1990030 pressure 
+#' 
+#' @param x Light data.frame
+#' @param vessel Vessel
+#' @param cruise
+#' @noRd
+
+mk9_lowpass_filter <- function(x, vessel, cruise) {
+  
+  if(vessel == 162 & cruise %in% c(202201, 202202)) {
+    
+    lp_filter <- function(var, tc, freq_n) {
+      
+      n_var <- length(var)
+      aa <- 1 / (1 + 2 * tc * (1/freq_n))
+      bb <- (1 - 2 * tc * (1/freq_n)) * aa
+      new_var <- numeric(length = n_var)
+      new_var[1] <- var[1]
+      
+      for(jj in 2:n_var) {
+        new_var[jj] <- aa*(var[jj]+var[jj-1]) - bb * new_var[jj-1]
+      }
+      
+      return(new_var)
+    }
+    
+    in_var <- x$ldepth
+    
+    pass_1 <- lp_filter(var = in_var,
+                        tc = 4,
+                        freq_n = 1)
+    pass_2 <- lp_filter(var = rev(pass_1),
+                        tc = 4,
+                        freq_n = 1)
+    
+    x$ldepth <- rev(pass_2)
+  }
+  
+  return(x)
+}

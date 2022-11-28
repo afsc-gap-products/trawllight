@@ -9,6 +9,12 @@
 #' @export
 
 mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
+  
+  ######
+  # vessel = 162
+  # cruise = 202201
+  # survey = "BS"
+  ######
 
   channel <- trawllight:::get_connected(channel = channel)
   
@@ -71,8 +77,6 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	# format MK9 time to same as found in SGT and MBT
 	light$date_time <- as.POSIXct(paste(light$V1, light$V2), format = "%m/%d/%Y %H:%M:%S")
 	
-
-	
 	print(paste0("mk9_time_offset: Imported ", nrow(light), " rows of data in ", ncol(light), " variable columns."))
 	
 	#######changed from 7 or 6
@@ -82,6 +86,8 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	} else {
 	  stop("Check number of columns in mk9_corr and create new value in time_offset()")
 	}
+	
+	light <- trawllight:::mk9_lowpass_filter(x = light, vessel = vessel, cruise = cruise)
 
 	# ldepth = MK9 depth
 	# ltemp = MK9 temperature
@@ -117,7 +123,6 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 	  sub.light = subset(light, ldate_time > min.mbt - 300 & ldate_time < max.mbt + 300)
 	  colnames(sub.light)[5] = "date_time"
 	  sub.light2 = sub.light
-	  # print(i)
 
 	  for (j in 1:361) {
 	  
@@ -134,7 +139,7 @@ mk9_time_offset <- function(vessel, cruise, survey, channel = NULL) {
 				aa[i,j] = NA
 				bb[i,j] = NA
 			}else{
-				# aligning light meter ldepth with MBT DEPTH with a linear model
+				# aligning light meter ldepth with TDR depth using a linear model
 				rsqr[i,j] = summary(lm(depth ~ ldepth, data = merged))$r.squared
 				aa[i,j] = lm(depth ~ ldepth, data = merged)$coefficients[1]
 				bb[i,j] = lm(depth ~ ldepth, data = merged)$coefficients[2]

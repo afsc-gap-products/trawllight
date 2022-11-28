@@ -19,10 +19,9 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	yy <- as.character(substr(cruise,3,4))
 	sur <- survey.names$dir_name[survey.names$cap_name == survey]
 	light.loc <-  here::here("data", "mk9", survey, cruise, vessel)
-	# extinct.loc <- "G:\\RACE_LIGHT\\LightData\\Data\\ExtinctionCoefficients\\"
 
 	## get data
-	hauls = trawllight:::mk9_get_haul_list(survey = survey ,
+	hauls <- trawllight:::mk9_get_haul_list(survey = survey ,
 	                      vessel = vessel, 
 	                      cruise = cruise, 
 	                      channel = channel)
@@ -53,7 +52,7 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	file.idx1 <- which(substr(files.in.dir, 1, 4) == "trwl")
 
 	## read in trawl-mounted light meter data (there could be more than one file)
-	for (file in file.idx1) {
+	for(file in file.idx1) {
 		assign(paste("trwl", file, sep = ""),
 		read.csv(paste(light.loc, "/", files.in.dir[file], sep= "" ), header = F, skip = 1))
 		}
@@ -88,11 +87,11 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 
 	# empty data set to receive raw MK9 data
 	## 2004 and 2005 MK9 data have a different format than subsequent years; here's code to deal with it
-	if(ncol(light) == 6){ #cruise <= 201801
+	if(ncol(light) == 6){
 		light <- light[,3:6]
 		colnames(light) <- c("ldepth","ltemp","llight","ldate_time")
 
-		## create null database to rbind records into from the loop below
+		## Setup data.frame to combine records using the loop below
 		light.df <- data.frame(vessel = numeric(), cruise = numeric(), haul = numeric(), cdepth = numeric(), ctime = character(), 
 			ldepth = numeric(), ltemp = numeric(), llight = numeric(), stringsAsFactors = FALSE)
 			df.names <- names(light.df)
@@ -100,13 +99,15 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 		light <- light[,3:7]
 		colnames(light) <- c("ldepth","ltemp","llight","lcond","ldate_time")
 
-		## create null database to rbind records into from the loop below
+		## Setup data.frame to combine records using the loop below
 		light.df <- data.frame(vessel = numeric(), cruise = numeric(), haul = numeric(), cdepth = numeric(), ctime = character(), 
 			ldepth = numeric(), ltemp = numeric(), llight = numeric(), lcond = numeric(), stringsAsFactors = FALSE)
 			df.names <- names(light.df)
 	} else {
 		  stop(paste0("extinction: Unexpected number of columns, (", ncol(light), ") in light data csv. Expected 6 or 7."))
 	}
+	
+	light <- trawllight:::mk9_lowpass_filter(x = light, vessel = vessel, cruise = cruise)
 	
 	light <- trawllight:::mk9_find_offset(light = light, 
 	                                      mbt = mbt, 
@@ -116,8 +117,8 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	## identify offsets file and read in (there should be just one)
 	file.idx2 <- which(substr(files.in.dir, 1, 7) == "offsets")
 	assign("offsets", read.csv(paste(light.loc, "/", files.in.dir[file.idx2], sep = ""), header = TRUE))
+	
 	# eliminate hauls where an offset time could not be calculated
-
 	offset.names <- names(offsets)
 	## substitute smoothed offset times for NAs and for offsets where R-sqr < 0.97
 	mixed.offsets <- ifelse(is.na(offsets$offset),round(offsets$smooth_offset,0),
@@ -151,17 +152,16 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	haullist <- merge(haullist, end_time)
 	haullist <- merge(haullist, good.perf)
 
-	extinct.df <- data.frame(vessel = numeric(), cruise = numeric(), haul = numeric(), extinction = numeric(), longitude = numeric(), 
-		latitude = numeric(), stringsAsFactors = FALSE)
-		e.names <- names(extinct.df)
+	# extinct.df <- data.frame(vessel = numeric(), cruise = numeric(), haul = numeric(), extinction = numeric(), longitude = numeric(), 
+	# 	latitude = numeric(), stringsAsFactors = FALSE)
+	# 	e.names <- names(extinct.df)
 
 	## assign haul numbers, time offsets, and depth corrections to MK9 data to produce corrected data set
 	## also compute extinction coefficients for down and upcasts and assign them to global positioning coordinates
 	for(h in sort(haullist$haul)) {
 
-		# print(h)
 		## subset data by haul
-		haultime <- haullist[haullist$haul == h,c("starttime","haul.end","a","b","offset")]
+		haultime <- haullist[haullist$haul == h, c("starttime","haul.end","a","b","offset")]
 		## get smaller subset of data between start and end times
 		light.haul <- with(light, subset(light, light$ldate_time >= haultime$starttime & light$ldate_time <= haultime$haul.end)) 
 
@@ -202,39 +202,39 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 		ob.pos <- sgt[sgt$haul == h & sgt$time_flag == 3, c("longitude","latitude")]
 		fb.pos <- sgt[sgt$haul == h & sgt$time_flag == 7, c("longitude","latitude")]
 
-		if(length(down[,1]) == 0){
-			dn.cast.extinct = NA
-		} else{
-			# get light intercept from light regressed on depth
-			down.coef <- lm(llight ~ cdepth, data = down)
-			down.0 <- down.coef$coefficients[1]
-			# there could be multiple records at max depth so take average
-			ob.depth <- max(down$cdepth)
-			ob.light <- mean(down[down$cdepth == ob.depth, "llight"])
-			# take natural log of the change in light between surface and bottom over bottom depth
-			dn.cast.extinct <- -(log(ob.light/down.0)/ob.depth)
-			}
-
-		if(length(up[,1]) == 0){
-			up.cast.extinct = NA
-		}else{
-			up.coef <- lm(llight ~ cdepth, data = up)
-			up.0 <- up.coef$coefficients[1]
-			fb.depth <- max(up$cdepth)
-			fb.light <- mean(up[up$cdepth == fb.depth, "llight"])
-			up.cast.extinct <- -(log(fb.light/up.0)/fb.depth)
-			}
-
-		r1 <- cbind(unique(vch[1]), unique(vch[2]), unique(vch[3]), extinction = dn.cast.extinct, ob.pos)
-		r2 <- cbind(unique(vch[1]), unique(vch[2]), unique(vch[3]), extinction = up.cast.extinct, fb.pos)
-		## for rbind to work need to keep all of the field names the same throughout concatenation process
-		r1r2 <- rbind(r1,r2); names(r1r2) <- e.names
-
-		extinct.df <- rbind(extinct.df, r1r2); names(extinct.df) <- e.names
+		# if(length(down[,1]) == 0){
+		# 	dn.cast.extinct = NA
+		# } else{
+		# 	# get light intercept from light regressed on depth
+		# 	down.coef <- lm(llight ~ cdepth, data = down)
+		# 	down.0 <- down.coef$coefficients[1]
+		# 	# there could be multiple records at max depth so take average
+		# 	ob.depth <- max(down$cdepth)
+		# 	ob.light <- mean(down[down$cdepth == ob.depth, "llight"])
+		# 	# take natural log of the change in light between surface and bottom over bottom depth
+		# 	dn.cast.extinct <- -(log(ob.light/down.0)/ob.depth)
+		# 	}
+		# 
+		# if(length(up[,1]) == 0){
+		# 	up.cast.extinct = NA
+		# }else{
+		# 	up.coef <- lm(llight ~ cdepth, data = up)
+		# 	up.0 <- up.coef$coefficients[1]
+		# 	fb.depth <- max(up$cdepth)
+		# 	fb.light <- mean(up[up$cdepth == fb.depth, "llight"])
+		# 	up.cast.extinct <- -(log(fb.light/up.0)/fb.depth)
+		# 	}
+		# 
+		# r1 <- cbind(unique(vch[1]), unique(vch[2]), unique(vch[3]), extinction = dn.cast.extinct, ob.pos)
+		# r2 <- cbind(unique(vch[1]), unique(vch[2]), unique(vch[3]), extinction = up.cast.extinct, fb.pos)
+		# ## for rbind to work need to keep all of the field names the same throughout concatenation process
+		# r1r2 <- rbind(r1,r2); names(r1r2) <- e.names
+		# 
+		# extinct.df <- rbind(extinct.df, r1r2); names(extinct.df) <- e.names
 
 		}
 
-	names(extinct.df) <- e.names
+	# names(extinct.df) <- e.names
 	names(light.df) <- df.names
 
 	## place corrected haul-specific light meter data into the vessel's data directory
@@ -246,13 +246,9 @@ mk9_extinction <- function(channel, survey, vessel, cruise, make.plots = TRUE){
 	  
 	  dat_to_plot$ctime <- as.POSIXct(dat_to_plot$ctime)
 	  
-	  head(dat_to_plot)
-	  
 	  unique_hauls <- dat_to_plot |> 
 	    dplyr::select(vessel, cruise, haul) |>
 	    unique()
-	  
-	  nrow(unique_hauls)
 	  
 	  print(paste0("Writing haul plots to ", light.loc, "/plots_cast_dat.pdf"))
 	  pdf(file = paste0(light.loc, "/plots_cast_dat.pdf"), onefile = TRUE)
