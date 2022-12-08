@@ -32,6 +32,6 @@ Suggests: knitr,
     RODBC,
     getPass
 Remotes:
-    afsc-gap-products/gapctd
+    afsc-gap-products/gapctd,
     cran/kedd
 VignetteBuilder: knitr
