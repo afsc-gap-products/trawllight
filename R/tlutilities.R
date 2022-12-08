@@ -40,11 +40,11 @@ tlu_process_all <- function(dir.path,
       casttimes$upcast_end <- as.POSIXct(strptime(casttimes$upcast_end, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage")) + time.buffer
       
       if(is.na(casttimes$downcast_start[1])) {
-        stop(paste(dir.path, "/CastTimes.csv date format not recognized! (", ctime_2, " >>> ", casttimes$downcast_start[1], ")" , sep = ""))
+        stop(paste(dir.path, "/CastTimes.csv date format not recognized! Format must be YYYY-MM-DD HH:MM:SS (", ctime_2, " >>> ", casttimes$downcast_start[1], ")" , sep = ""))
       }
       
       if(is.na(corr_mk9hauls$ctime[1])) {
-        stop(paste(dir.path, "/corr_MK9hauls.csv date format not recognized! (", ctime_1, " >>> ", corr_mk9hauls$ctime[1], ")" , sep = ""))
+        stop(paste(dir.path, "/corr_MK9hauls.csv date format not recognized! Format must be YYYY-MM-DD HH:MM:SS (", ctime_1, " >>> ", corr_mk9hauls$ctime[1], ")" , sep = ""))
       }
       
       for(j in 1:nrow(casttimes)) {
@@ -375,36 +375,14 @@ tlu_surface_light <- function(light.data, cast.data, time.buffer = 30, agg.fun =
   # Remove measurements outside of time window
   light.data <- subset(light.data, !is.na(updown))
   
-  llight <- aggregate(surf_trans_llight ~ haul + updown + vessel + cruise, data = light.data, FUN = agg.fun)
+  llight <- aggregate(cbind(surf_trans_llight, surf_llight) ~ haul + updown + vessel + cruise, 
+                      data = light.data, 
+                      FUN = agg.fun)
   
   ctime <- aggregate(ctime ~ haul + updown + vessel + cruise, data = light.data, FUN = mean)
   
   ctime$ctime <- lubridate::with_tz(ctime$ctime, "America/Anchorage")
   light.data <- dplyr::inner_join(llight, ctime, by = c("haul", "updown", "vessel", "cruise"))
-  
-  return(light.data)
-}
-
-
-
-#' Correct tag time in cases where offsets were incorrect
-#'
-#' For use processing AOPs from AFSC/RACE/GAP data structure. Make adjustments to correct inconsistencies between tag time and survey time.
-#' 
-#' @param light.data Data frame with light data
-#' @param cast.data Data frame containing case data.
-#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")
-#' @keywords internal
-#' @noRd
-
-tlu_time_adjustments <- function(light.data, cast.data, survey) {
-  
-  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
-  
-  if(cast.data$vessel[1] == 134 & cast.data$cruise[1] == 200601 & region_light == "ebs") {
-    print("Correcting 134-200601")
-    light.data$ctime[lubridate::month(light.data$ctime) >=7 & lubridate::day(light.data$ctime) > 8] <- light.data$ctime[lubridate::month(light.data$ctime) >=7 & lubridate::day(light.data$ctime) > 8] - 3600*12 # Time off by 1 hour
-  }
   
   return(light.data)
 }
@@ -497,7 +475,7 @@ tlu_combine_casts <- function(haul.dat = NULL,
     )
   casts <-
     dplyr::full_join(casts,
-                     dplyr::select(surface, vessel, cruise, haul, updown, surf_trans_llight))
+                     dplyr::select(surface, vessel, cruise, haul, updown, surf_trans_llight, surf_llight))
   casts <- subset(casts, !is.na(surface_time))
   
   return(casts)
