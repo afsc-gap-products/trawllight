@@ -426,8 +426,8 @@ mk9_get_regr <- function(survey, vessel, cruise, channel = NULL){
 #' Lowpass filter to fix malfunctioning 1990030 pressure 
 #' 
 #' @param x Light data.frame
-#' @param vessel Vessel
-#' @param cruise
+#' @param vessel Vessel number
+#' @param cruise Cruise number
 #' @noRd
 
 mk9_lowpass_filter <- function(x, vessel, cruise) {
