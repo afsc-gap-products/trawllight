@@ -42,6 +42,7 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
         "quality",
         "k_column",
         "surf_trans_llight",
+        "surf_llight",
         "haul_type",
         "stationid",
         "bottom_depth",
