@@ -74,6 +74,12 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
     # Convert times into POSIXct
     deck_dat$ctime <- as.POSIXct(strptime(deck_dat$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
     
+    if(casttimes$vessel[1] == 134 & casttimes$cruise[1] == 200601) {
+      print("mk9_find_surface_offset: Additional correction for vessel 134, cruise 200601; -12 hours for data after July 8, 2006")
+      deck_dat$ctime[lubridate::month(deck_dat$ctime) >=7 & lubridate::day(deck_dat$ctime) > 8] <- 
+        deck_dat$ctime[lubridate::month(deck_dat$ctime) >=7 & lubridate::day(deck_dat$ctime) > 8] - 3600*12
+    }
+    
     sample_surf_light <- data.frame()
     
     for(jj in 1:nrow(casttimes)) {
@@ -144,6 +150,44 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
       
       print(paste0("mk9_find_surface_offset: Applying ", best_offset, " hr offset to deck data from cruise ", casttimes$cruise[1], ", vessel ", casttimes$vessel[1], ". Correlation: ", round(best_cor, 3)))
       deck_dat$ctime <- deck_dat$ctime + 3600 * best_offset
+      
+      # Plot best offset
+      
+      sample_surf_light$best_ctime_adj_utc <- lubridate::with_tz(sample_surf_light$ctime + 3600 * best_offset, 
+                                                                 tzone = "UTC")
+      
+      sample_surf_light$llight_converted <- trawllight::convert_light(sample_surf_light$llight, 
+                                                                      convert.method = "wc")
+      
+      sample_surf_light$best_ac_PAR <- fishmethods::astrocalc4r(day = lubridate::day(sample_surf_light$best_ctime_adj_utc),
+                                                                month = lubridate::month(sample_surf_light$best_ctime_adj_utc),
+                                                                year = lubridate::year(sample_surf_light$best_ctime_adj_utc),
+                                                                hour = lubridate::hour(sample_surf_light$best_ctime_adj_utc) + 
+                                                                  lubridate::minute(sample_surf_light$best_ctime_adj_utc)/60,
+                                                                timezone = rep(0, nrow(sample_surf_light)),
+                                                                lat = sample_surf_light$latitude,
+                                                                lon = sample_surf_light$longitude, 
+                                                                withinput = FALSE)$PAR
+      
+      best_offset_lm <- lm(log10(llight_converted+1e-5) ~ log10(best_ac_PAR+1e-5), data = sample_surf_light)
+      
+      sample_surf_light$llight_resid <- residuals(best_offset_lm)
+      
+      pdf(paste0(light_dir, "/plot_surface_residuals_by_day.pdf"))
+      print(ggplot() +
+              geom_boxplot(data = sample_surf_light,
+                         mapping = aes(x = lubridate::day(ctime + 3600 * best_offset),
+                                       y = llight_resid,
+                                       group = lubridate::day(ctime + 3600 * best_offset))) +
+              geom_smooth(data = sample_surf_light,
+                          mapping = aes(x = lubridate::day(ctime + 3600 * best_offset),
+                                        y = llight_resid)) +
+              geom_hline(yintercept = 0, linetype = 2) +
+              facet_wrap(~lubridate::month(best_ctime_adj_utc, 
+                                           label = TRUE), scales = "free_x", nrow = 3) +
+              scale_x_continuous(name = "Day") +
+              scale_y_continuous(name = "Residual"))
+      dev.off()
       
       print(paste0("mk9_find_surface_offset: Writing time-shifted surface light to ", light_dir, "/corr_deck.csv"))
       write.csv(x = deck_dat, paste0(light_dir, "/corr_deck.csv"), row.names = FALSE)

@@ -67,25 +67,33 @@ tlu_process_all <- function(dir.path,
                                                   agg.fun = agg.fun,
                                                   ...)
           
-          atten.out <- trawllight::calculate_attenuation(filtered, light.col = "trans_llight", depth.col = "cdepth", kz.binsize = kz.binsize)
+          atten.out <- trawllight::calculate_attenuation(filtered, 
+                                                         light.col = "trans_llight", 
+                                                         depth.col = "cdepth", 
+                                                         kz.binsize = kz.binsize)
           
           if(!is.null(atten.out)) {
             atten.out$attenuation$vessel <- vert$vessel[1]
             atten.out$attenuation$cruise <- vert$cruise[1]
             atten.out$attenuation$haul <- vert$haul[1]
             atten.out$attenuation$quality <- vert$quality[1]
+            atten.out$attenuation$quality <- dir.path
             
             atten.out$fit_atten$vessel <- vert$vessel[1]
             atten.out$fit_atten$cruise <- vert$cruise[1]
             atten.out$fit_atten$haul <- vert$haul[1]
+            atten.out$fit_atten$path <- dir.path
             
             atten.out$fit_residuals$vessel <- vert$vessel[1]
             atten.out$fit_residuals$cruise <- vert$cruise[1]
             atten.out$fit_residuals$haul <- vert$haul[1]
+            atten.out$fit_residuals$path <- dir.path
             
           }
           
           lr.out <- trawllight:::light_proportion(filtered)
+          lr.out$path <- dir.path
+          
           
           if(cast.dir == "upcast") {
             lr.out$surface_time <- casttimes$upcast_end[j]
@@ -125,42 +133,42 @@ tlu_process_all <- function(dir.path,
 #'
 #' Calculate surface light for upcasts and downcasts.
 #'
-#' @param dir.structure A character vector containing filepaths for all of the directories containing light measurements from surface/deck archival tags.
+#' @param dir.path A character vector containing filepaths for all of the directories containing light measurements from surface/deck archival tags.
 #' @param adjust.time Should trawllight::tlu_time_adjustments function be used to adjust surface times to match survey time.
 #' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")
 #' @param ... Additional arguments to be passed to surface_light or time_adjustments
 #' @noRd
 
-tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...) {
+tlu_process_all_surface <- function(dir.path, adjust.time = T, survey, ...) {
 
   surface.output <- NULL
   
   region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
   
-  for(t in 1:length(dir.structure)) {
+  for(t in 1:length(dir.path)) {
     
     # Check for CastTimes
-    if(!file.exists(paste(dir.structure[t], "/CastTimes.csv", sep = ""))) {
-      print(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.structure[t])))
+    if(!file.exists(paste(dir.path[t], "/CastTimes.csv", sep = ""))) {
+      print(paste("process_all_surface: CastTimes.csv not found in" , paste(dir.path[t])))
     } else {
       
       # Import CastTImes
-      print(paste("Processing", dir.structure[t]))
-      cast.times <- read.csv(paste(dir.structure[t], "/CastTimes.csv", sep = ""))
+      print(paste("Processing", dir.path[t]))
+      cast.times <- read.csv(paste(dir.path[t], "/CastTimes.csv", sep = ""))
       
-      deck.exists <- file.exists(paste0(dir.structure[t], "/corr_deck.csv"))
+      deck.exists <- file.exists(paste0(dir.path[t], "/corr_deck.csv"))
       
       if(deck.exists) {
-        print(paste0("tlu_process_all_surface: Loading ", dir.structure[t], "/corr_deck.csv"))
-        deck.data <- read.csv(file = paste0(dir.structure[t], "/corr_deck.csv"))
+        print(paste0("tlu_process_all_surface: Loading ", dir.path[t], "/corr_deck.csv"))
+        deck.data <- read.csv(file = paste0(dir.path[t], "/corr_deck.csv"))
         deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
       } else {
         # Find names of deck files
-        deck.files <- list.files(path = dir.structure[t], pattern = "^deck.*\\.csv", full.names = T)
+        deck.files <- list.files(path = dir.path[t], pattern = "^deck.*\\.csv", full.names = T)
         
         # Check for CastTimes
         if(length(deck.files) < 1) {
-          warning(paste("process_all_surface: Deck light measurements not found in" , paste(dir.structure[t])))
+          warning(paste("process_all_surface: Deck light measurements not found in" , paste(dir.path[t])))
           next
         } else {
           
@@ -176,11 +184,12 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
               deck.data <- rbind(deck.data, add.deck)
             }
           }
+          
           # Convert times into POSIXct
           deck.data$ctime <- as.POSIXct(strptime(deck.data$ctime, format = "%m/%d/%Y %H:%M:%S", tz = "America/Anchorage"))
           
           if(is.na(deck.data$ctime[1])) {
-            stop(paste(dir.structure[t], "date format not recognized! (", deck.data$ctime, " >>> ", deck.data$ctime[1], ")" , sep = ""))
+            stop(paste(dir.path[t], "date format not recognized! (", deck.data$ctime, " >>> ", deck.data$ctime[1], ")" , sep = ""))
           }
           
         }
@@ -196,18 +205,13 @@ tlu_process_all_surface <- function(dir.structure, adjust.time = T, survey, ...)
           cast.times$upcast_end <- as.POSIXct(strptime(cast.times$upcast_end,
                                                        format = "%Y-%m-%d %H:%M:%S", tz = "America/Anchorage"))
           
-          if(adjust.time & !deck.exists) {
-            # Correct cases where there is a mismatch between survey time and tag time
-            deck.data <- trawllight:::tlu_time_adjustments(light.data = deck.data,
-                                                           cast.data = cast.times,
-                                                           survey = survey)
-          }
           if(nrow(deck.data) > 0) {
             
             # Find surface measurements
             surface_profiles <- trawllight:::tlu_surface_light(light.data = deck.data,
                                                                cast.data = cast.times,
                                                                ...)
+            surface_profiles$path <- dir.path[t]
             if(is.null(surface.output)) {
               
               surface.output <- surface_profiles
@@ -260,7 +264,8 @@ tlu_prep_haul_data <- function(channel = NULL,
 
 tlu_prep_dir_list <- function(survey, 
                               light_data_root = "G:/RACE_LIGHT/LightData/Data",
-                              omit_string = "oldtags") {
+                              omit_string = NULL#"oldtags"
+                              ) {
   
   region_light <- c("ebs", "nbs", "goa", "ai")[match(survey, c("BS", "NBS", "GOA", "AI"))]
   
@@ -375,15 +380,43 @@ tlu_surface_light <- function(light.data, cast.data, time.buffer = 30, agg.fun =
   # Remove measurements outside of time window
   light.data <- subset(light.data, !is.na(updown))
   
+  print(paste0("tlu_surface_light: Calculating averages from ", 
+               nrow(light.data), 
+               " surface measurements."))
+  
   llight <- aggregate(cbind(surf_trans_llight, surf_llight) ~ haul + updown + vessel + cruise, 
                       data = light.data, 
                       FUN = agg.fun)
   
-  ctime <- aggregate(ctime ~ haul + updown + vessel + cruise, data = light.data, FUN = mean)
+  ctime <- aggregate(ctime ~ haul + updown+ vessel + cruise, 
+                     data = light.data, 
+                     FUN = mean)
   
   ctime$ctime <- lubridate::with_tz(ctime$ctime, "America/Anchorage")
   light.data <- dplyr::inner_join(llight, ctime, by = c("haul", "updown", "vessel", "cruise"))
   
+  return(light.data)
+}
+
+#' Correct tag time in cases where offsets were incorrect
+#'
+#' For use processing AOPs from AFSC/RACE/GAP data structure. Make adjustments to correct inconsistencies between tag time and survey time.
+#'
+#' @param light.data Data frame with light data
+#' @param cast.data Data frame containing case data.
+#' @param survey RACE survey region as a character vector ("BS", "NBS", "AI", "GOA" or "SLOPE")
+#' @keywords internal
+#' @noRd
+
+tlu_time_adjustments <- function(light.data, cast.data, survey) {
+
+  region_light <- c("ebs", "nbs", "goa", "ai", "slope")[match(survey, c("BS", "NBS", "GOA", "AI", "SLOPE"))]
+
+  if(cast.data$vessel[1] == 134 & cast.data$cruise[1] == 200601 & region_light == "ebs") {
+    print("Correcting 134-200601")
+    light.data$ctime[lubridate::month(light.data$ctime) >=7 & lubridate::day(light.data$ctime) > 8] <- light.data$ctime[lubridate::month(light.data$ctime) >=7 & lubridate::day(light.data$ctime) > 8] - 3600*12
+  }
+
   return(light.data)
 }
 
@@ -437,7 +470,7 @@ tlu_combine_casts <- function(haul.dat = NULL,
     upcasts <- readRDS(file = upcasts)
   }
 
-  down <- merge(downcasts$light_ratios,
+  down <- dplyr::inner_join(downcasts$light_ratios,
                 dplyr::select(
                   haul.dat,
                   vessel,
@@ -447,8 +480,13 @@ tlu_combine_casts <- function(haul.dat = NULL,
                   start_longitude
                 )
   )
-  up <- merge(upcasts$light_ratios,
-              dplyr::select(haul.dat, vessel, cruise, haul, end_latitude, end_longitude)
+  up <- dplyr::inner_join(upcasts$light_ratios,
+              dplyr::select(haul.dat, 
+                            vessel, 
+                            cruise, 
+                            haul, 
+                            end_latitude, 
+                            end_longitude)
   )
   names(up)[which(names(up) == "end_longitude")] <- "longitude"
   names(up)[which(names(up) == "end_latitude")] <- "latitude"
@@ -461,7 +499,7 @@ tlu_combine_casts <- function(haul.dat = NULL,
   casts <- rbind(down, up)
   casts <- subset(casts, !is.na(latitude) & !is.na(longitude))
   casts <-
-    merge(
+    dplyr::inner_join(
       casts,
       dplyr::select(
         haul.dat,
@@ -475,7 +513,14 @@ tlu_combine_casts <- function(haul.dat = NULL,
     )
   casts <-
     dplyr::full_join(casts,
-                     dplyr::select(surface, vessel, cruise, haul, updown, surf_trans_llight, surf_llight))
+                     dplyr::select(surface, 
+                                   vessel, 
+                                   cruise, 
+                                   haul, 
+                                   path,
+                                   updown, 
+                                   surf_trans_llight, 
+                                   surf_llight))
   casts <- subset(casts, !is.na(surface_time))
   
   return(casts)
@@ -511,7 +556,7 @@ tlu_calc_resids <- function(input,
   direct_res <-
     trawllight::tag_residuals_direct(
       x = subset(indirect_res$resid_df, !is.na(surf_trans_llight)),
-      formula = log10(trans_llight) ~ log10(surf_trans_llight) + interaction(vessel, cruise),
+      formula = log10(trans_llight) ~ log10(surf_trans_llight) + factor(path), # + interaction(vessel, cruise),
       water.col = "trans_llight",
       surface.col = "surf_trans_llight",
       depth.col = "cdepth",
@@ -646,14 +691,14 @@ tlu_flag_orientation <- function(resids,
     dplyr::full_join(
       trawllight::assign_orientation(
         resids$resid_df,
-        formula = vessel + cruise + haul + updown ~ cdepth,
+        formula = path + vessel + cruise + haul + updown ~ cdepth, # vessel + cruise + haul + updown ~ cdepth,
         resid.col = indirect.col,
         resid.cut = it,
         output.name = "indirect_orientation"
       ),
       trawllight::assign_orientation(
         resids$resid_df,
-        formula = vessel + cruise + haul + updown ~ cdepth,
+        formula =  path + vessel + cruise  + haul + updown ~ cdepth, # vessel + cruise + haul + updown ~ cdepth,
         resid.col = direct.col,
         resid.cut = dt,
         output.name = "direct_orientation"
@@ -678,13 +723,13 @@ tlu_flag_orientation <- function(resids,
 
 tlu_use_casts <- function(input) {
   qq <-
-    unique(dplyr::select(input, vessel, cruise, haul, updown, quality, orientation))
+    unique(dplyr::select(input, vessel, cruise, haul, path, updown, quality, orientation))
   qq$final_qa <- 0
   qq$final_qa[qq$quality == 1 & qq$orientation == "Good"] <- 1
   qq <-
     reshape::cast(
       data = qq,
-      vessel + cruise + haul ~ updown,
+      vessel + cruise + haul + path ~ updown,
       value = "final_qa",
       fill = 0
     )
@@ -771,13 +816,14 @@ tlu_calc_summary <- function(survey) {
     vessel,
     cruise,
     haul,
+    path,
     updown,
     bottom_depth,
     cdepth,
     latitude,
     longitude,
     stationid),
-    cdepth ~ bottom_depth + vessel + cruise + haul + updown + latitude + longitude + stationid,
+    cdepth ~ bottom_depth + vessel + cruise + haul + path + updown + latitude + longitude + stationid, # bottom_depth + vessel + cruise + haul + updown + latitude + longitude + stationid,
     FUN = max) |>
     dplyr::inner_join(readRDS(here::here("output", paste0("temp_", region_light, "_filtered_huds.rds")))) |>
     dplyr::rename(near_bottom_optical_depth = optical_depth) |>
@@ -793,6 +839,7 @@ tlu_calc_summary <- function(survey) {
       vessel,
       cruise,
       haul,
+      path,
       updown,
       latitude,
       longitude))) |>
@@ -803,32 +850,32 @@ tlu_calc_summary <- function(survey) {
   print("tlu_calc_summary: Estimating z[10]")  
   Z10_df <- trawllight:::tlu_cast_wrapper(
     x = od_df,
-    id.col = c("vessel", "cruise", "haul", "updown"),
+    id.col = c("vessel", "cruise", "haul", "updown", "path"),
     FUN = trawllight::find_optical_depth,
     with.input = TRUE,
     return.col = "Z10",
     target.od = -1 * log(0.1)) |>
-    dplyr::select(vessel, cruise, haul, updown, latitude, longitude, haul_type, bottom_depth, Z10) |>
+    dplyr::select(vessel, cruise, haul, path, updown, latitude, longitude, haul_type, bottom_depth, Z10) |>
     unique()
   
   print("tlu_calc_summary: Estimating z[1]")  
   Z1_df <- trawllight:::tlu_cast_wrapper(
     x = od_df,
-    id.col = c("vessel", "cruise", "haul", "updown"),
+    id.col = c("vessel", "cruise", "haul", "updown", "path"),
     FUN = trawllight::find_optical_depth,
     with.input = TRUE,
     return.col = "Z1",
     target.od = -1 * log(0.01)) |>
-    dplyr::select(vessel, cruise, haul, updown, latitude, longitude, haul_type, bottom_depth, Z1) |>
+    dplyr::select(vessel, cruise, haul, path, updown, latitude, longitude, haul_type, bottom_depth, Z1) |>
     unique()
   
   print("tlu_calc_summary: Combining temp_nbod, z1, and z10")
   dplyr::full_join(Z10_df, 
                    Z1_df, 
-                   by = c("vessel", "cruise", "haul", "updown", "latitude", "longitude", "haul_type", "bottom_depth")) |>
+                   by = c("vessel", "cruise", "haul", "updown", "path", "latitude", "longitude", "haul_type", "bottom_depth")) |>
     dplyr::full_join(
       readRDS(here::here("output", paste0("temp_", region_light, "_nbod.rds"))), 
-      by = c("vessel", "cruise", "haul", "updown", "latitude", "longitude", "haul_type", "bottom_depth")) |>
+      by = c("vessel", "cruise", "haul", "updown", "path", "latitude", "longitude", "haul_type", "bottom_depth")) |>
     saveRDS(here::here("output", paste0(region_light, "_final_stn_vars.rds")))
   
 }

@@ -14,7 +14,7 @@ tlu_setup_dir <- function(channel = NULL, survey, light_data_root = "G:/RACE_LIG
     stop(paste0("survey selection, ", survey, " invalid. Must be 'BS', 'NBS', 'GOA', or 'AI'."))
   }
   
-  channel <- trawllight:::get_connected(channel = channel)
+  channel <- trawllight:::get_connected(channel = channel, schema = "AFSC")
   
   if(!dir.exists(here::here("data"))) {
     dir.create(here::here("data"))

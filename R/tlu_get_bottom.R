@@ -21,8 +21,8 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
     
     if(!file.exists(here::here("output", paste0("temp_bottom_light_", ii, ".rds")))) {  
     
-    light_path = paste0(directory_structure[ii, ], "/corr_MK9hauls.csv")
-    casttimes_path = paste0(directory_structure[ii, ], "/CastTimes.csv")
+    light_path <- paste0(directory_structure[ii, ], "/corr_MK9hauls.csv")
+    casttimes_path <- paste0(directory_structure[ii, ], "/CastTimes.csv")
     
     if(!file.exists(light_path)) {
       message("tlu_get_bottom: Bottom light file does not exist. Skipping", light_path)
@@ -68,6 +68,7 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
     bottom_light_df$trans_llight <- trawllight::convert_light(bottom_light_df$llight, ...)
   
     if(!is.null(bottom_light_df)) {
+      bottom_light_df$path <- directory_structure[ii, ]
       saveRDS(bottom_light_df, file = here::here("output", paste0("temp_bottom_light_", ii, ".rds")))
     }
     
@@ -78,38 +79,38 @@ tlu_get_bottom <- function(directory_structure, agg_fun = mean, time_buffer = 30
   output_bottom_light <- trawllight:::.combine_rds_df(pattern = "temp_bottom_light_", n_batch = 5)
   
   loc_dat <- readRDS(file = here::here("output", paste0(region_light, "_tag_residuals.rds"))) |>
-    dplyr::select(vessel, cruise, haul, latitude, longitude, bottom_depth, stationid) |>
+    dplyr::select(vessel, cruise, haul, path, latitude, longitude, bottom_depth, stationid) |>
     unique() |>
-    dplyr::group_by(vessel, cruise, haul, bottom_depth, stationid) |>
+    dplyr::group_by(vessel, cruise, haul, path, bottom_depth, stationid) |>
     dplyr::summarise(latitude = mean(latitude),
                      longitude = mean(longitude))
   
   print("tlu_get_bottom: combining bottom light with orientation flags.")
   output_bottom_light <- readRDS(file = here::here("output", paste0(region_light, "_tag_residuals.rds"))) |>
-    dplyr::select(vessel, cruise, haul, orientation) |>
+    dplyr::select(vessel, cruise, haul, path, orientation) |>
     unique() |>
     dplyr::mutate(orientation = as.numeric(as.character(factor(orientation, levels = c("Bad", "Good"), labels = c(0,1))))) |>
-    dplyr::group_by(vessel, cruise, haul) |>
+    dplyr::group_by(vessel, cruise, path, haul) |>
     dplyr::summarise(orientation = mean(orientation), .groups = "keep") |>
     dplyr::ungroup() |>
     dplyr::right_join(output_bottom_light |> 
                         dplyr::select(-ltemp, -ldepth, -lcond),
-                      by = c("vessel", "cruise", "haul")) |>
+                      by = c("vessel", "cruise", "haul", "path")) |>
     dplyr::inner_join(loc_dat, 
-                      by = c("vessel", "cruise", "haul"))
+                      by = c("vessel", "cruise", "haul", "path"))
   
   print(paste0("tlu_get_bottom: writing output to ",  out_path))
   saveRDS(output_bottom_light, file = out_path)
   
   print(paste0("tlu_get_bottom: writing mean bottom light to ", out_path_mean))
   output_bottom_light |>
-    dplyr::group_by(vessel, cruise, haul) |>
+    dplyr::group_by(vessel, cruise, path, haul) |>
     dplyr::summarise(tag_bottom_light = agg_fun(llight),
                      bottom_light = agg_fun(trans_llight),
                      cdepth = mean(cdepth),
                      orientation = mean(orientation)) |>
     dplyr::ungroup() |>
-    dplyr::inner_join(loc_dat, by = c("vessel", "cruise", "haul")) |>
+    dplyr::inner_join(loc_dat, by = c("vessel", "cruise", "haul", "path")) |>
     saveRDS(file = out_path_mean)
     
     print("tlu_get_bottom: removing temporary rds files from output")
