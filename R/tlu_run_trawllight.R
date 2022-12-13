@@ -49,7 +49,8 @@ tlu_run_trawllight <- function(rm.temp = TRUE, survey) {
     print("tlu_run_trawllight: Combining residuals and interpolated HUDS, filtering using QA/QC criteria, and recalculating optical depth for interpolated data.")
     readRDS(here::here("output", paste0(region_light, "_tag_residuals.rds"))) |>
       trawllight:::tlu_use_casts() |> 
-      merge(readRDS(here::here("output", paste0("temp_", region_light, "_interp_huds.rds")))) |>
+      merge(readRDS(here::here("output",
+                               paste0("temp_", region_light, "_interp_huds.rds")))) |>
       trawllight:::tlu_use_casts2() |>
       trawllight:::tlu_cast_wrapper(id.col = c("vessel", "cruise", "haul", "updown", "path"),
                    FUN = light_proportion) |>
