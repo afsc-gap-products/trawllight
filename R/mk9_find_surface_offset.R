@@ -45,7 +45,7 @@ mk9_find_surface_offset <- function(channel = NULL, survey, vessel, cruise, try_
   
   # Check for CastTimes
   if(length(deck_files) < 1) {
-    warning(paste("mk9_find_surface_offset: Deck light measurements not found in" , paste(dir.structure[t])))
+    warning(paste("mk9_find_surface_offset: Deck light measurements not found in" , light_dir))
   } else {
     
     #Import first deck file
