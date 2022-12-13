@@ -77,7 +77,7 @@ tlu_process_all <- function(dir.path,
             atten.out$attenuation$cruise <- vert$cruise[1]
             atten.out$attenuation$haul <- vert$haul[1]
             atten.out$attenuation$quality <- vert$quality[1]
-            atten.out$attenuation$quality <- dir.path
+            atten.out$attenuation$path <- dir.path
             
             atten.out$fit_atten$vessel <- vert$vessel[1]
             atten.out$fit_atten$cruise <- vert$cruise[1]
