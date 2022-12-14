@@ -36,12 +36,17 @@ calculate_attenuation <- function(x,
 
     # Fit loess model
     N_depths <- seq(min(min(x$cdepth)), max(x$cdepth), kz.binsize)
-    profile_light_loess <- loess.as2(x = x$cdepth, y = log(x$trans_llight), criterion = loess.criterion, degree = loess.degree, ...)
+    profile_light_loess <- loess.as2(x = x$cdepth, 
+                                     y = log(x$trans_llight), 
+                                     criterion = loess.criterion, 
+                                     degree = loess.degree, ...)
 
     # Adjust for overfitting caused by omitted data
     k <- 3
     while(profile_light_loess$s == Inf) {
-      profile_light_loess <- loess.as2(x = x$cdepth, y = log(x$trans_llight), criterion = loess.criterion,
+      profile_light_loess <- loess.as2(x = x$cdepth, 
+                                       y = log(x$trans_llight), 
+                                       criterion = loess.criterion,
                                        degree = loess.degree,
                                        min.bins = k+1)
     }
