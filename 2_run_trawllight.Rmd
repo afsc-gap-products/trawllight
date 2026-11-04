@@ -17,9 +17,9 @@ Setup the directory for a survey region (options: "BS", "NBS", "GOA", "AI", "SLO
 
 ```{r setup, include=TRUE, eval=FALSE}
 library(trawllight)
-survey <- "AI"
+survey <- "GOA"
 
-trawllight::tlu_setup_dir(survey = "AI", 
+trawllight::tlu_setup_dir(survey = "GOA", 
                           light_data_root = "G:/RACE_LIGHT/LightData/Data")
 ```
 
@@ -40,7 +40,8 @@ trawllight::tlu_get_casts(
   silent = FALSE,
   bin.size = 2,
   bin.gap = 6,
-  agg.fun = trawllight::geometric.mean)
+  agg.fun = mean,  #trawllight::geometric.mean
+  convert.method = "wc")
 
 trawllight::tlu_get_casts(
   directory_structure = read.csv(file = here::here("imports", "directories.csv")),
@@ -50,7 +51,8 @@ trawllight::tlu_get_casts(
   silent = FALSE,
   bin.size = 2,
   bin.gap = 6,
-  agg.fun = trawllight::geometric.mean)
+  agg.fun = mean,  #trawllight::geometric.mean
+  convert.method = "wc")
 ```
 
 ## 3. Retrieve light surface data
@@ -64,7 +66,8 @@ trawllight::tlu_get_surface(
   directory_structure = read.csv(file = here::here("imports", "directories.csv")),
   survey = survey, 
   time.buffer = 30, 
-  agg.fun = trawllight::geometric.mean)
+  agg.fun = mean, #trawllight::geometric.mean
+  convert.method = "wc")
 ```
 
 ## 4. Apply QA/QC protocols
@@ -81,6 +84,7 @@ trawllight::tlu_run_trawllight(rm.temp = TRUE,
 ```{r getbottom, include=TRUE, eval=FALSE}
 trawllight::tlu_get_bottom(
   directory_structure = read.csv(file = here::here("imports", "directories.csv")),
-  survey = survey)
+  survey = survey, 
+  convert.method = "wc")
 
 ```

@@ -3,14 +3,24 @@ inst/doc
 *.RData
 *.Rproj.user
 *.Rhistory
-.gitignore
 .Rbuildignore
 .Rproj.user
 
 /imports/
 /output/
-/data/
+/data/**/*.pdf
+/data/**/*.rds
+/data/**/*.xlsx
+/data/**/*.txt
+/data/**/*.htm
+/data/*.csv
+/data/VIIRS/
+/data/pres_sfc/
+/data/**/*.tab
+/data/**/*.xlsx
 /archive/
 /analysis/
 /plots/
 *.nc
+*.png
+*.zip

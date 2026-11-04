@@ -1,0 +1,61 @@
+***  Installation Started 06/06/2016 7:56  ***
+Title: Mk9host v1.09.1028 Installation
+Source: C:\My Web Sites\Manuals\Light meters\Wildlife Computers MK9 Stan\MK9HostInstaller.exe
+Made Dir: C:\Program Files\Wildlife Computers
+Made Dir: C:\Program Files\Wildlife Computers\Mk9Host
+File Copy: C:\Program Files\Wildlife Computers\Mk9Host\UNWISE.EXE
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: Mk9host v1.09.1028
+RegDB Name: DisplayName
+RegDB Root: 2
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: C:\PROGRA~1\WILDLI~1\Mk9Host\UNWISE.EXE C:\PROGRA~1\WILDLI~1\Mk9Host\INSTALL.LOG
+RegDB Name: UninstallString
+RegDB Root: 2
+File Overwrite: C:\Windows\System32\scrrun.dll
+File Copy: C:\Windows\System32\TabCtl32.ocx
+File Copy: C:\Windows\System32\MsFlxGrd.ocx
+File Overwrite: C:\Windows\System32\MSCOMM32.OCX
+File Copy: C:\Program Files\Wildlife Computers\Mk9Host\MK9HOST.1.09.1028.exe
+File Overwrite: C:\Windows\System32\msvcrt.dll
+File Copy: C:\Windows\System32\MSComCt2.ocx
+Made Dir: C:\Users\NOAA\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Wildlife Computers
+Shell Link: C:\Users\NOAA\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Wildlife Computers\Mk9host v1.09.1028.lnk
+Self-Register: C:\Windows\System32\oleaut32.dll
+Self-Register: C:\Windows\System32\olepro32.dll
+Self-Register: C:\Windows\System32\stdole2.tlb
+Self-Register: C:\Windows\System32\msvbvm60.dll
+Self-Register: C:\Windows\System32\comcat.dll
+Self-Register: C:\Windows\System32\mfc42.dll
+Self-Register: C:\Windows\System32\MSCOMCTL.OCX
+Self-Register: C:\Windows\System32\COMDLG32.OCX
+Self-Register: C:\Windows\System32\scrrun.dll
+Self-Register: C:\Windows\System32\TabCtl32.ocx
+Self-Register: C:\Windows\System32\MsFlxGrd.ocx
+Self-Register: C:\Windows\System32\MSCOMM32.OCX
+Self-Register: C:\Windows\System32\MSComCt2.ocx
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: www.wildlifecomputers.com
+RegDB Name: HelpLink
+RegDB Root: 2
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: 425-881-3048
+RegDB Name: HelpTelephone
+RegDB Root: 2
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: Wildlife Computers
+RegDB Name: Publisher
+RegDB Root: 2
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: www.wildlifecomputers.com
+RegDB Name: URLInfoAbout
+RegDB Root: 2
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: Roger Hill
+RegDB Name: Contact
+RegDB Root: 2
+RegDB Key: Software\Microsoft\Windows\CurrentVersion\Uninstall\Mk9host v1.09.1028
+RegDB Val: 1.09.1028
+RegDB Name: DisplayVersion
+RegDB Root: 2
+User Rights: Admin

@@ -1,0 +1,43 @@
+---------------------------------------------------------------
+---------------------------------------------------------------
+Connect by Gary m on 20100607 at 225548 with Mk9Host v1.09.1028
+Tagware = 1.09d
+Deployment and status information being read
+Date Deployed: 28-Aug-2009 12:07
+Date Deployment ended: 26-Mar-2010 13:58
+No Errors Reported during last deployment.
+Sampling interval for Temperature changed to 10 seconds
+Sampling interval for Light Level changed to 10 seconds
+Sampling interval for Temperature changed to 1 seconds
+Sampling interval for Light Level changed to 1 seconds
+Sampling interval for Wet/Dry changed to 1 seconds
+Sample only when wet
+Sample Wet or Dry
+Sampling interval for Depth changed to 10 seconds
+Sampling interval for Temperature changed to 10 seconds
+Sampling interval for Light Level changed to 10 seconds
+Sampling interval for Depth changed to 10 seconds
+Sampling interval for Temperature changed to 10 seconds
+Sampling interval for Light Level changed to 10 seconds
+Sampling interval for Wet/Dry changed to 0 seconds
+Generating Report
+Testing sensors
+Depth =    -1.5
+Temperature =    21.10
+Light Level =    142
+Battery Voltage =    3.5051
+Wet/Dry =    255
+Starting Mk9 update
+Mk9 update successful
+Mk9 is deployed
+---------------------------------------------------------------
+---------------------------------------------------------------
+Connect by Gary m on 20100607 at 230216 with Mk9Host v1.09.1028
+Tagware = 1.09d
+Deployment and status information being read
+No Deployment Date data encountered.  This is most likely from a newly formatted instrument.
+If this is not the case, please contact Wildlife Computers before redeploying the instrument.
+Generating Report
+Save Setup button Pressed
+Generating Report
+Mk9 is deployed
